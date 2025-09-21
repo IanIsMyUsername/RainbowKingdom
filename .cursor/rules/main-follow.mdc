@@ -1,0 +1,7 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+1. The project should support iOS 14.0 and later.
+
