@@ -66,7 +66,7 @@ struct MathDailyPracticeView: View {
                 .font(.system(size: 34, weight: .bold))
                 .foregroundColor(.blue)
             
-            Text("10道加减法题目")
+            Text("20道加减法题目")
                 .font(.title2)
                 .foregroundColor(.gray)
             
@@ -76,8 +76,8 @@ struct MathDailyPracticeView: View {
                     .foregroundColor(.primary)
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("• 共10道题目")
-                    Text("• 数字范围：20以内")
+                    Text("• 共20道题目")
+                    Text("• 数字范围：25以内")
                     Text("• 包含加法和减法")
                     Text("• 完成后自动打卡")
                 }
@@ -400,7 +400,7 @@ struct MathDailyPracticeView: View {
     
     // MARK: - 辅助方法
     private func startQuiz() {
-        quizManager.startQuiz(operationType: .mixed, questionCount: 10)
+        quizManager.startQuiz(operationType: .mixed, questionCount: 20)
         selectedAnswer = ""
         showAnswerFeedback = false
         isAnswerCorrect = false

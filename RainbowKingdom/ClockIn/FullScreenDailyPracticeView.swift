@@ -366,7 +366,7 @@ struct FullScreenDailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("20个选择题，考察最近1个月的单词和短语")
+                            Text("15个选择题，考察最近2周的单词和短语")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
@@ -402,7 +402,7 @@ struct FullScreenDailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("10道加减法题目，20以内数字运算")
+                            Text("20道加减法题目，25以内数字运算")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }

@@ -26,7 +26,7 @@ struct EnglishClockInView: View {
     @State private var correctAnswer = ""
     @State private var showSummary = false
     
-    private let questionCount = 20
+    private let questionCount = 15
     
     var body: some View {
         NavigationView {
@@ -400,10 +400,16 @@ struct EnglishClockInView: View {
     
     // 开始测验
     private func startQuiz() {
-        // 获取最近一个月的词汇
-        let recentVocabularies = getRecentVocabularies()
+        // 强制重新加载CSV文件以确保获取最新数据
+        print("开始重新加载CSV文件...")
+        vocabularyManager.reloadFromCSV()
+        print("CSV文件重新加载完成，当前词汇总数: \(vocabularyManager.vocabularies.count)")
         
-        // 生成20个选择题
+        // 获取最近两周的词汇
+        let recentVocabularies = getRecentVocabularies()
+        print("筛选出的近两周词汇数: \(recentVocabularies.count)")
+        
+        // 生成15个选择题
         questions = generateQuestions(from: recentVocabularies)
         
         // 如果没有足够的词汇，显示错误
@@ -421,10 +427,43 @@ struct EnglishClockInView: View {
         isQuizCompleted = false
     }
     
-    // 获取最近一个月的词汇
+    // 获取最近两周的词汇，如果不够则从全部词汇补全
     private func getRecentVocabularies() -> [Vocabulary] {
-        let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-        return vocabularyManager.vocabularies.filter { $0.createdDate >= oneMonthAgo }
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // 获取两周前的开始日期（00:00:00）
+        let twoWeeksAgo = calendar.date(byAdding: .weekOfYear, value: -2, to: today) ?? today
+        let twoWeeksAgoStart = calendar.startOfDay(for: twoWeeksAgo)
+        
+        // 获取今天的结束日期（23:59:59）
+        let todayEnd = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: today)) ?? today
+        
+        // 筛选最近两周的词汇（包括今天）
+        let recentVocabularies = vocabularyManager.vocabularies.filter { vocab in
+            let vocabDate = calendar.startOfDay(for: vocab.createdDate)
+            let isInRange = vocabDate >= twoWeeksAgoStart && vocabDate < todayEnd
+            if isInRange {
+                print("选中词汇: \(vocab.english), 日期: \(vocab.createdDate)")
+            }
+            return isInRange
+        }
+        
+        
+        // 如果近两周的词汇不够15个，从全部词汇中补全
+        if recentVocabularies.count < questionCount {
+            let allVocabularies = vocabularyManager.vocabularies
+            let remainingCount = questionCount - recentVocabularies.count
+            let additionalVocabularies = allVocabularies
+                .filter { calendar.startOfDay(for: $0.createdDate) < twoWeeksAgoStart }
+                .shuffled()
+                .prefix(remainingCount)
+            
+            
+            return recentVocabularies + Array(additionalVocabularies)
+        }
+        
+        return recentVocabularies
     }
     
     // 生成题目
