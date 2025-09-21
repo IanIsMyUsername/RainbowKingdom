@@ -109,6 +109,7 @@ struct MathDailyPracticeView: View {
             
             Spacer()
         }
+        .padding()
     }
     
     // MARK: - 练习界面
@@ -202,6 +203,7 @@ struct MathDailyPracticeView: View {
                 }
             }
         }
+        .padding()
     }
     
     // MARK: - 结果界面
