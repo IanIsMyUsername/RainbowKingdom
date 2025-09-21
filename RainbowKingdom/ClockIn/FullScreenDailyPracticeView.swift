@@ -10,42 +10,32 @@ import SwiftUI
 struct FullScreenDailyPracticeView: View {
     @StateObject private var clockInManager = ClockInManager()
     @StateObject private var vocabularyManager = VocabularyManager()
-    @Environment(\.presentationMode) var presentationMode
     @State private var showingEnglishPractice = false
     @State private var showingMathPractice = false
     @State private var showingHistory = false
     
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // 日历、统计和今日状态（一行显示）
-                    HStack(alignment: .center, spacing: 15) {
-                        calendarView
-                        VStack(spacing: 15) {
-                            statsCard
-                            todayStatusCard
-                        }
-                        .frame(width: 200)
+        ScrollView {
+            VStack(spacing: 20) {
+                // 日历、统计和今日状态（一行显示）
+                HStack(alignment: .center, spacing: 15) {
+                    calendarView
+                    VStack(spacing: 15) {
+                        statsCard
+                        todayStatusCard
                     }
-                    
-                    // 练习选项
-                    practiceOptionsCard
-                    
-                    Spacer(minLength: 20)
+                    .frame(width: 200)
                 }
-                .padding()
+                
+                // 练习选项
+                practiceOptionsCard
+                
+                Spacer(minLength: 20)
             }
-            .navigationTitle("每日一练")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("返回") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-            }
+            .padding()
         }
+        .navigationTitle("每日一练")
+        .navigationBarTitleDisplayMode(.inline)
         .fullScreenCover(isPresented: $showingEnglishPractice) {
             EnglishClockInView()
                 .environmentObject(clockInManager)

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var showingDailyPractice = false
+    @State private var isDailyPracticeActive = true
     
     var body: some View {
         NavigationView {
@@ -25,9 +25,7 @@ struct ContentView: View {
                     .padding(.bottom, 30)
                 
                 VStack(spacing: 20) {
-                    Button(action: {
-                        showingDailyPractice = true
-                    }) {
+                    NavigationLink(destination: FullScreenDailyPracticeView(), isActive: $isDailyPracticeActive) {
                         HStack {
                             Image(systemName: "calendar.badge.checkmark")
                                 .font(.title2)
@@ -95,9 +93,6 @@ struct ContentView: View {
             }
             .padding()
             .navigationBarHidden(true)
-        }
-        .fullScreenCover(isPresented: $showingDailyPractice) {
-            FullScreenDailyPracticeView()
         }
     }
 }
