@@ -73,21 +73,18 @@ class VocabularyManager: ObservableObject {
     private let selectedGroupKey = "SelectedGroup"
     
     init() {
-        loadGroups()
-        loadVocabularies()
+        // 每次启动都从Bundle同步CSV到Documents
+        syncCSVFromBundleToDocuments()
+        
+        // 从Documents的CSV文件加载词汇
+        loadFromDocumentsCSV()
+        
+        // 设置默认组（不从UserDefaults加载）
+        groups = VocabularyGroup.defaultGroups
+        
+        // 加载用户设置
         loadSelectedGroup()
         loadDateFilterSettings()
-        
-        // 如果没有组，添加默认组
-        if groups.isEmpty {
-            groups = VocabularyGroup.defaultGroups
-            saveGroups()
-        }
-        
-        // 如果没有词汇，尝试从CSV加载
-        if vocabularies.isEmpty {
-            loadFromCSV()
-        }
         
 //        // 如果仍然为空，添加示例词汇
 //        if vocabularies.isEmpty {
@@ -203,7 +200,103 @@ class VocabularyManager: ObservableObject {
     // 手动重新加载CSV文件（用于开发调试）
     func reloadFromCSV() {
         print("手动重新加载CSV文件...")
-        loadFromCSV()
+        loadFromDocumentsCSV()
+    }
+    
+    // 手动同步Bundle中的CSV到Documents（供外部调用）
+    func syncFromBundle() {
+        print("手动同步Bundle中的CSV文件...")
+        syncCSVFromBundleToDocuments()
+        // 同步后重新加载数据
+        loadFromDocumentsCSV()
+    }
+    
+    // 强制重新同步（清除所有数据，完全从Bundle重新加载）
+    func forceResyncFromBundle() {
+        print("强制重新同步，清除所有现有数据...")
+        
+        // 清空当前词汇
+        vocabularies = []
+        
+        // 重新同步
+        syncCSVFromBundleToDocuments()
+        
+        // 重新加载
+        loadFromDocumentsCSV()
+        
+        print("强制重新同步完成，当前词汇数量: \(vocabularies.count)")
+    }
+    
+    // 获取Documents目录中的CSV文件路径
+    private func getDocumentsCSVURL() -> URL {
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return documentsPath.appendingPathComponent("vocabularies.csv")
+    }
+    
+    // 每次启动都从Bundle同步CSV到Documents（完全覆盖）
+    private func syncCSVFromBundleToDocuments() {
+        // 获取Bundle中的CSV文件
+        var bundleCSVURL: URL?
+        
+        if let bundleURL = Bundle.main.url(forResource: "vocabularies", withExtension: "csv", subdirectory: "Resources") {
+            bundleCSVURL = bundleURL
+        } else if let bundleURL = Bundle.main.url(forResource: "vocabularies", withExtension: "csv") {
+            bundleCSVURL = bundleURL
+        }
+        
+        guard let bundleURL = bundleCSVURL else {
+            print("Bundle中未找到vocabularies.csv文件")
+            return
+        }
+        
+        let documentsCSVURL = getDocumentsCSVURL()
+        
+        // 直接拷贝Bundle中的CSV文件到Documents，完全覆盖
+        do {
+            // 如果目标文件已存在，先删除
+            if FileManager.default.fileExists(atPath: documentsCSVURL.path) {
+                try FileManager.default.removeItem(at: documentsCSVURL)
+                print("已删除Documents中的旧CSV文件")
+            }
+            
+            try FileManager.default.copyItem(at: bundleURL, to: documentsCSVURL)
+            print("已从Bundle同步CSV文件到Documents: \(documentsCSVURL.path)")
+        } catch {
+            print("同步CSV文件失败: \(error)")
+        }
+    }
+    
+    // 从Documents的CSV文件加载词汇
+    private func loadFromDocumentsCSV() {
+        let documentsCSVURL = getDocumentsCSVURL()
+        
+        if FileManager.default.fileExists(atPath: documentsCSVURL.path) {
+            print("从Documents/vocabularies.csv加载文件")
+            loadCSVFromURL(documentsCSVURL)
+        } else {
+            print("Documents中不存在vocabularies.csv文件")
+        }
+    }
+    
+    // 保存词汇到指定的CSV文件
+    private func saveVocabulariesToCSV(_ vocabularies: [Vocabulary], to csvURL: URL) {
+        var csvContent = "英文,中文,分类,类型,创建日期\n"
+        
+        for vocabulary in vocabularies {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            let dateString = dateFormatter.string(from: vocabulary.createdDate)
+            
+            let line = "\(vocabulary.english),\(vocabulary.chinese),\(vocabulary.group),\(vocabulary.type.rawValue),\(dateString)\n"
+            csvContent += line
+        }
+        
+        do {
+            try csvContent.write(to: csvURL, atomically: true, encoding: .utf8)
+            print("词汇已保存到CSV文件: \(csvURL.path)")
+        } catch {
+            print("保存CSV文件失败: \(error)")
+        }
     }
     
     // 解析日期字符串
@@ -286,7 +379,6 @@ class VocabularyManager: ObservableObject {
             }
             
             vocabularies = newVocabularies
-            saveVocabularies()
             print("从CSV加载了 \(vocabularies.count) 个词汇")
             
         } catch {
@@ -294,19 +386,16 @@ class VocabularyManager: ObservableObject {
         }
     }
     
-    // 保存词汇到UserDefaults
+    // 保存词汇到Documents的CSV文件
     private func saveVocabularies() {
-        if let encoded = try? JSONEncoder().encode(vocabularies) {
-            userDefaults.set(encoded, forKey: vocabulariesKey)
-        }
+        let csvURL = getDocumentsCSVURL()
+        saveVocabulariesToCSV(vocabularies, to: csvURL)
     }
     
-    // 从UserDefaults加载词汇
+    // 从UserDefaults加载词汇（已弃用，现在主要使用CSV文件）
     private func loadVocabularies() {
-        if let data = userDefaults.data(forKey: vocabulariesKey),
-           let decoded = try? JSONDecoder().decode([Vocabulary].self, from: data) {
-            vocabularies = decoded
-        }
+        // 不再从UserDefaults加载，所有数据都从CSV文件读取
+        // 保留此方法以避免破坏现有调用
     }
     
     // 保存组到UserDefaults

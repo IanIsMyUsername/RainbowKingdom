@@ -69,22 +69,33 @@ class ClockInManager: ObservableObject {
     
     init() {
         loadClockInRecords()
-        loadStats()
+        loadStats()  
         updateTodayRecord()
+        addSeptemberRecords()
     }
     
-    // 添加打卡记录
+    // 添加打卡记录（只保留每天每科目的最高分记录）
     func addClockInRecord(_ record: ClockInRecord) {
-        // 检查今天是否已经有记录
         let today = Calendar.current.startOfDay(for: Date())
+        
+        // 查找今天同一科目的记录
         if let existingIndex = clockInRecords.firstIndex(where: { 
             Calendar.current.isDate($0.date, inSameDayAs: today) && $0.subject == record.subject
         }) {
-            // 更新今天的记录
-            clockInRecords[existingIndex] = record
+            let existingRecord = clockInRecords[existingIndex]
+            
+            // 比较分数，只保留更高的分数
+            if record.score > existingRecord.score {
+                clockInRecords[existingIndex] = record
+                print("更新 \(record.subject) 打卡记录：\(existingRecord.score) -> \(record.score)")
+            } else {
+                print("保持 \(record.subject) 打卡记录：\(existingRecord.score) (新分数 \(record.score) 较低)")
+                return // 不保存较低分数的记录
+            }
         } else {
             // 添加新记录
             clockInRecords.append(record)
+            print("添加新的 \(record.subject) 打卡记录：\(record.score)")
         }
         
         saveClockInRecords()
@@ -221,6 +232,71 @@ class ClockInManager: ObservableObject {
         let averageScore = completedRecords.isEmpty ? 0 : completedRecords.map { $0.percentage }.reduce(0, +) / Double(completedRecords.count)
         
         return (totalDays, completedDays, averageScore)
+    }
+    
+    // 添加2025年9月20号和21号的打卡记录
+    func addSeptemberRecords() {
+        let calendar = Calendar.current
+        
+        // 创建9月20号的记录
+        if let date20 = calendar.date(from: DateComponents(year: 2025, month: 9, day: 20)) {
+            let englishRecord20 = ClockInRecord(
+                date: date20,
+                subject: "英语",
+                score: 10,
+                totalQuestions: 10,
+                timeSpent: 300, // 5分钟
+                completedDate: date20,
+                questions: nil,
+                userAnswers: []
+            )
+            
+            let mathRecord20 = ClockInRecord(
+                date: date20,
+                subject: "数学",
+                score: 10,
+                totalQuestions: 10,
+                timeSpent: 240, // 4分钟
+                completedDate: date20,
+                questions: nil,
+                userAnswers: []
+            )
+            
+            addClockInRecord(englishRecord20)
+            addClockInRecord(mathRecord20)
+            print("已添加2025年9月20号的打卡记录")
+        }
+        
+        // 创建9月21号的记录
+        if let date21 = calendar.date(from: DateComponents(year: 2025, month: 9, day: 21)) {
+            let englishRecord21 = ClockInRecord(
+                date: date21,
+                subject: "英语",
+                score: 10,
+                totalQuestions: 10,
+                timeSpent: 280, // 4分40秒
+                completedDate: date21,
+                questions: nil,
+                userAnswers: []
+            )
+            
+            let mathRecord21 = ClockInRecord(
+                date: date21,
+                subject: "数学",
+                score: 10,
+                totalQuestions: 10,
+                timeSpent: 320, // 5分20秒
+                completedDate: date21,
+                questions: nil,
+                userAnswers: []
+            )
+            
+            addClockInRecord(englishRecord21)
+            addClockInRecord(mathRecord21)
+            print("已添加2025年9月21号的打卡记录")
+        }
+        
+        print("完成添加2025年9月20号和21号的打卡记录（都是100分）")
     }
     
     // 保存打卡记录
