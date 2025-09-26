@@ -57,19 +57,38 @@ struct DailyPracticeStats: Codable {
     }
 }
 
+// 日历状态模型
+struct CalendarState: Codable {
+    var startDate: Date
+    var endDate: Date
+    var lastUpdateDate: Date
+    
+    init() {
+        let calendar = Calendar.current
+        let today = Date()
+        self.startDate = calendar.date(byAdding: .day, value: -14, to: today) ?? today
+        self.endDate = calendar.date(byAdding: .day, value: 6, to: today) ?? today
+        self.lastUpdateDate = today
+    }
+}
+
 // 打卡管理器
 class ClockInManager: ObservableObject {
     @Published var clockInRecords: [ClockInRecord] = []
     @Published var stats: DailyPracticeStats = DailyPracticeStats()
     @Published var todayRecord: ClockInRecord?
+    @Published var calendarState: CalendarState = CalendarState()
     
     private let userDefaults = UserDefaults.standard
     private let clockInRecordsKey = "ClockInRecords"
     private let statsKey = "DailyPracticeStats"
+    private let calendarStateKey = "CalendarState"
     
     init() {
         loadClockInRecords()
-        loadStats()  
+        loadStats()
+        loadCalendarState()
+        updateCalendarStateIfNeeded()
         updateTodayRecord()
         addSeptemberRecords()
     }
@@ -327,5 +346,59 @@ class ClockInManager: ObservableObject {
            let decoded = try? JSONDecoder().decode(DailyPracticeStats.self, from: data) {
             stats = decoded
         }
+    }
+    
+    // 加载日历状态
+    private func loadCalendarState() {
+        if let data = userDefaults.data(forKey: calendarStateKey),
+           let decoded = try? JSONDecoder().decode(CalendarState.self, from: data) {
+            calendarState = decoded
+        }
+    }
+    
+    // 保存日历状态
+    private func saveCalendarState() {
+        if let encoded = try? JSONEncoder().encode(calendarState) {
+            userDefaults.set(encoded, forKey: calendarStateKey)
+        }
+    }
+    
+    // 检查并更新日历状态（只有当今天超出当前显示范围时才更新）
+    private func updateCalendarStateIfNeeded() {
+        let calendar = Calendar.current
+        let today = Calendar.current.startOfDay(for: Date())
+        
+        // 检查今天是否超出当前显示范围
+        let isTodayBeforeRange = today < calendar.startOfDay(for: calendarState.startDate)
+        let isTodayAfterRange = today > calendar.startOfDay(for: calendarState.endDate)
+        
+        // 只有当今天超出范围时才更新
+        if isTodayBeforeRange || isTodayAfterRange {
+            let newStartDate = calendar.date(byAdding: .day, value: -14, to: today) ?? today
+            let newEndDate = calendar.date(byAdding: .day, value: 6, to: today) ?? today
+            
+            calendarState.startDate = newStartDate
+            calendarState.endDate = newEndDate
+            calendarState.lastUpdateDate = today
+            
+            saveCalendarState()
+            print("日历范围已更新：\(newStartDate) 到 \(newEndDate)")
+        }
+    }
+    
+    // 获取日历日期（使用持久化的日期范围）
+    func getCalendarDates() -> [Date] {
+        let calendar = Calendar.current
+        var dates: [Date] = []
+        
+        // 使用保存的日期范围
+        var currentDate = calendarState.startDate
+        
+        while currentDate <= calendarState.endDate {
+            dates.append(currentDate)
+            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+        }
+        
+        return dates
     }
 }

@@ -97,7 +97,7 @@ struct FullScreenDailyPracticeView: View {
                 }
                 
                 // 日历日期
-                ForEach(getCalendarDates(), id: \.self) { date in
+                ForEach(clockInManager.getCalendarDates(), id: \.self) { date in
                     calendarDayView(date: date)
                 }
             }
@@ -168,25 +168,6 @@ struct FullScreenDailyPracticeView: View {
         )
     }
     
-    // 获取日历日期（前面两周 + 今天 + 未来一周）
-    private func getCalendarDates() -> [Date] {
-        let calendar = Calendar.current
-        let today = Date()
-        
-        // 计算开始日期：今天往前推14天
-        let startDate = calendar.date(byAdding: .day, value: -14, to: today) ?? today
-        
-        var dates: [Date] = []
-        
-        // 生成21天的日期（前面14天 + 今天 + 未来7天）
-        for i in 0..<21 {
-            if let date = calendar.date(byAdding: .day, value: i, to: startDate) {
-                dates.append(date)
-            }
-        }
-        
-        return dates
-    }
     
     // 统计卡片
     private var statsCard: some View {
