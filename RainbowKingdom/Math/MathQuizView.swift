@@ -302,6 +302,9 @@ struct MathQuizView: View {
             
             // 添加到打卡记录
             if let lastResult = quizManager.quizResults.last {
+                // 将数学题目转换为QuizQuestion格式
+                let quizQuestions = convertMathQuestionsToQuizQuestions(lastResult.questions)
+                
                 let clockInRecord = ClockInRecord(
                     date: Calendar.current.startOfDay(for: Date()),
                     subject: "数学",
@@ -309,7 +312,7 @@ struct MathQuizView: View {
                     totalQuestions: lastResult.totalQuestions,
                     timeSpent: lastResult.timeSpent,
                     completedDate: lastResult.completedDate,
-                    questions: nil, // 数学题目使用nil，因为ClockInRecord现在支持可选
+                    questions: quizQuestions,
                     userAnswers: lastResult.userAnswers
                 )
                 clockInManager.addClockInRecord(clockInRecord)
@@ -355,6 +358,32 @@ struct MathQuizView: View {
         let minutes = Int(timeInterval) / 60
         let seconds = Int(timeInterval) % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    // 将数学题目转换为QuizQuestion格式
+    private func convertMathQuestionsToQuizQuestions(_ mathQuestions: [MathQuestion]) -> [QuizQuestion] {
+        return mathQuestions.map { mathQuestion in
+            // 创建一个虚拟的Vocabulary对象
+            let vocabulary = Vocabulary(
+                english: "Math Question",
+                chinese: "数学题目",
+                group: "数学练习",
+                type: .word,
+                createdDate: Date()
+            )
+            
+            // 生成选择题选项
+            let options = mathQuestion.options?.map { "\($0)" } ?? []
+            
+            return QuizQuestion(
+                vocabulary: vocabulary,
+                questionType: .multipleChoice,
+                question: mathQuestion.question,
+                correctAnswer: "\(mathQuestion.correctAnswer)",
+                options: options,
+                hint: "类型：\(mathQuestion.operation.displayName)"
+            )
+        }
     }
 }
 

@@ -55,6 +55,7 @@ struct ClockInHistoryView: View {
         .sheet(isPresented: $showingDetail) {
             if let record = selectedRecord {
                 ClockInDetailView(record: record)
+                    .environmentObject(clockInManager)
             }
         }
     }
@@ -147,7 +148,9 @@ struct ClockInHistoryView: View {
                             ForEach(groupedRecords[date] ?? []) { record in
                                 ClockInRecordRow(record: record) {
                                     selectedRecord = record
-                                    showingDetail = true
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        showingDetail = true
+                                    }
                                 }
                             }
                         }
@@ -277,6 +280,7 @@ struct ClockInRecordRow: View {
 struct ClockInDetailView: View {
     let record: ClockInRecord
     @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var clockInManager: ClockInManager
     
     var body: some View {
         NavigationView {

@@ -597,6 +597,9 @@ struct MathDailyPracticeView: View {
         
         // 创建打卡记录
         if let result = quizManager.quizResults.last {
+            // 将数学题目转换为QuizQuestion格式
+            let quizQuestions = convertMathQuestionsToQuizQuestions(result.questions)
+            
             let record = ClockInRecord(
                 date: result.completedDate,
                 subject: "数学",
@@ -604,7 +607,7 @@ struct MathDailyPracticeView: View {
                 totalQuestions: result.totalQuestions,
                 timeSpent: result.timeSpent,
                 completedDate: result.completedDate,
-                questions: nil, // 数学练习不使用QuizQuestion
+                questions: quizQuestions,
                 userAnswers: result.userAnswers
             )
             
@@ -624,6 +627,32 @@ struct MathDailyPracticeView: View {
         selectedAnswer = ""
         submittedQuestions = []
         quizManager.resetQuiz()
+    }
+    
+    // 将数学题目转换为QuizQuestion格式
+    private func convertMathQuestionsToQuizQuestions(_ mathQuestions: [MathQuestion]) -> [QuizQuestion] {
+        return mathQuestions.map { mathQuestion in
+            // 创建一个虚拟的Vocabulary对象
+            let vocabulary = Vocabulary(
+                english: "Math Question",
+                chinese: "数学题目",
+                group: "数学练习",
+                type: .word,
+                createdDate: Date()
+            )
+            
+            // 生成选择题选项
+            let options = mathQuestion.options?.map { "\($0)" } ?? []
+            
+            return QuizQuestion(
+                vocabulary: vocabulary,
+                questionType: .multipleChoice,
+                question: mathQuestion.question,
+                correctAnswer: "\(mathQuestion.correctAnswer)",
+                options: options,
+                hint: "类型：\(mathQuestion.operation.displayName)"
+            )
+        }
     }
 }
 

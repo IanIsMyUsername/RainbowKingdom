@@ -13,6 +13,8 @@ struct FullScreenDailyPracticeView: View {
     @State private var showingEnglishPractice = false
     @State private var showingMathPractice = false
     @State private var showingHistory = false
+    @State private var showingDayDetail = false
+    @State private var selectedDate: Date = Date()
     
     var body: some View {
         ScrollView {
@@ -47,6 +49,10 @@ struct FullScreenDailyPracticeView: View {
         }
         .sheet(isPresented: $showingHistory) {
             ClockInHistoryView()
+                .environmentObject(clockInManager)
+        }
+        .sheet(isPresented: $showingDayDetail) {
+            DayDetailView(selectedDate: selectedDate)
                 .environmentObject(clockInManager)
         }
     }
@@ -122,50 +128,56 @@ struct FullScreenDailyPracticeView: View {
         let hasMathCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "数学") : false
         let hasAnyCheckIn = hasEnglishCheckIn || hasMathCheckIn
         
-        return VStack(spacing: 2) {
-            Text("\(day)")
-                .font(.caption)
-                .fontWeight(isToday ? .bold : .regular)
-                .foregroundColor(isToday ? .white : (isFuture ? .secondary : .primary))
-            
-            // 打卡状态指示器（只对过去的日期显示）
-            if isPast {
-                HStack(spacing: 2) {
-                    if hasEnglishCheckIn {
-                        Circle()
-                            .fill(.blue)
-                            .frame(width: 4, height: 4)
+        return Button(action: {
+            selectedDate = date
+            showingDayDetail = true
+        }) {
+            VStack(spacing: 2) {
+                Text("\(day)")
+                    .font(.caption)
+                    .fontWeight(isToday ? .bold : .regular)
+                    .foregroundColor(isToday ? .white : (isFuture ? .secondary : .primary))
+                
+                // 打卡状态指示器（只对过去的日期显示）
+                if isPast {
+                    HStack(spacing: 2) {
+                        if hasEnglishCheckIn {
+                            Circle()
+                                .fill(.blue)
+                                .frame(width: 4, height: 4)
+                        }
+                        if hasMathCheckIn {
+                            Circle()
+                                .fill(.green)
+                                .frame(width: 4, height: 4)
+                        }
                     }
-                    if hasMathCheckIn {
-                        Circle()
-                            .fill(.green)
-                            .frame(width: 4, height: 4)
-                    }
+                } else if isFuture {
+                    // 未来日期显示灰色圆点
+                    Circle()
+                        .fill(.gray.opacity(0.3))
+                        .frame(width: 4, height: 4)
                 }
-            } else if isFuture {
-                // 未来日期显示灰色圆点
-                Circle()
-                    .fill(.gray.opacity(0.3))
-                    .frame(width: 4, height: 4)
             }
+            .frame(width: 40, height: 40)
+            .background(
+                Circle()
+                    .fill(
+                        isToday ? .purple : 
+                        (isPast && hasAnyCheckIn ? .green.opacity(0.2) : 
+                         isFuture ? .gray.opacity(0.1) : .clear)
+                    )
+            )
+            .overlay(
+                Circle()
+                    .stroke(
+                        isToday ? .purple : 
+                        (isPast && hasAnyCheckIn ? .green : .clear), 
+                        lineWidth: 2
+                    )
+            )
         }
-        .frame(width: 40, height: 40)
-        .background(
-            Circle()
-                .fill(
-                    isToday ? .purple : 
-                    (isPast && hasAnyCheckIn ? .green.opacity(0.2) : 
-                     isFuture ? .gray.opacity(0.1) : .clear)
-                )
-        )
-        .overlay(
-            Circle()
-                .stroke(
-                    isToday ? .purple : 
-                    (isPast && hasAnyCheckIn ? .green : .clear), 
-                    lineWidth: 2
-                )
-        )
+        .buttonStyle(PlainButtonStyle())
     }
     
     
@@ -414,6 +426,221 @@ struct FullScreenDailyPracticeView: View {
         )
     }
     
+}
+
+// 日期详情视图
+struct DayDetailView: View {
+    let selectedDate: Date
+    @EnvironmentObject var clockInManager: ClockInManager
+    @Environment(\.presentationMode) var presentationMode
+    @State private var showingRecordDetail = false
+    @State private var selectedRecord: ClockInRecord?
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    // 日期标题
+                    dateHeader
+                    
+                    // 打卡记录列表
+                    if dayRecords.isEmpty {
+                        emptyStateView
+                    } else {
+                        recordsList
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("打卡详情")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完成") {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingRecordDetail) {
+            if let record = selectedRecord {
+                ClockInDetailView(record: record)
+                    .environmentObject(clockInManager)
+            } else {
+                // 如果selectedRecord为nil，显示空视图
+                EmptyView()
+            }
+        }
+    }
+    
+    // 日期标题
+    private var dateHeader: some View {
+        VStack(spacing: 10) {
+            Text(formatDate(selectedDate))
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            Text(formatWeekday(selectedDate))
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 15)
+                .fill(Color(.systemBackground))
+                .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
+        )
+    }
+    
+    // 空状态视图
+    private var emptyStateView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .font(.system(size: 60))
+                .foregroundColor(.gray)
+            
+            Text("该日期无打卡记录")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+            
+            Text("完成练习后，打卡记录将显示在这里")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    // 记录列表
+    private var recordsList: some View {
+        VStack(spacing: 15) {
+            ForEach(dayRecords) { record in
+                RecordDetailCard(record: record) {
+                    selectedRecord = record
+                    DispatchQueue.main.async {
+                        showingRecordDetail = true
+                    }
+                }
+            }
+        }
+    }
+    
+    // 获取选中日期的打卡记录
+    private var dayRecords: [ClockInRecord] {
+        let calendar = Calendar.current
+        let targetDate = calendar.startOfDay(for: selectedDate)
+        
+        return clockInManager.clockInRecords.filter { record in
+            calendar.isDate(record.date, inSameDayAs: targetDate)
+        }.sorted { $0.completedDate < $1.completedDate }
+    }
+    
+    // 格式化日期
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy年MM月dd日"
+        formatter.locale = Locale(identifier: "zh_CN")
+        return formatter.string(from: date)
+    }
+    
+    // 格式化星期
+    private func formatWeekday(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        formatter.locale = Locale(identifier: "zh_CN")
+        return formatter.string(from: date)
+    }
+}
+
+// 记录详情卡片
+struct RecordDetailCard: View {
+    let record: ClockInRecord
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 15) {
+                // 科目和成绩
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(record.subject)
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                        
+                        Text("\(record.score)/\(record.totalQuestions) (\(String(format: "%.1f", record.percentage))%)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(record.performance)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(getPerformanceColor(record.percentage))
+                        
+                        Text(formatTime(record.completedDate))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        // 添加点击提示
+                        HStack(spacing: 4) {
+                            Text("点击查看详情")
+                                .font(.caption2)
+                                .foregroundColor(.blue)
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+                
+                // 详细信息
+                VStack(alignment: .leading, spacing: 8) {
+                    InfoRow(title: "完成时间", value: formatTime(record.completedDate))
+                    InfoRow(title: "用时", value: formatDuration(record.timeSpent))
+                    InfoRow(title: "正确率", value: "\(String(format: "%.1f", record.percentage))%")
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.string(from: date)
+    }
+    
+    private func formatDuration(_ timeInterval: TimeInterval) -> String {
+        let minutes = Int(timeInterval) / 60
+        let seconds = Int(timeInterval) % 60
+        return String(format: "%d分%d秒", minutes, seconds)
+    }
+    
+    private func getPerformanceColor(_ percentage: Double) -> Color {
+        switch percentage {
+        case 90...100:
+            return .green
+        case 80..<90:
+            return .blue
+        case 70..<80:
+            return .orange
+        default:
+            return .red
+        }
+    }
 }
 
 #Preview {
