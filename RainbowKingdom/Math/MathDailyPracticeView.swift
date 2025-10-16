@@ -20,6 +20,7 @@ struct MathDailyPracticeView: View {
     @State private var showAnswerFeedback = false
     @State private var isAnswerCorrect = false
     @State private var correctAnswer = ""
+    @State private var submittedQuestions: Set<Int> = [] // 跟踪已提交的题目
     
     var body: some View {
         NavigationView {
@@ -175,7 +176,7 @@ struct MathDailyPracticeView: View {
                 
                 Spacer()
                 
-                if !showAnswerFeedback {
+                if !showAnswerFeedback && !submittedQuestions.contains(quizManager.currentQuestionIndex) {
                     // 提交答案按钮
                     Button("提交答案") {
                         submitAnswer()
@@ -446,7 +447,7 @@ struct MathDailyPracticeView: View {
         VStack(spacing: 12) {
             ForEach(Array(options.enumerated()), id: \.offset) { index, option in
                 Button(action: {
-                    if !showAnswerFeedback {
+                    if !showAnswerFeedback && !submittedQuestions.contains(quizManager.currentQuestionIndex) {
                         selectedAnswer = "\(option)"
                     }
                 }) {
@@ -477,7 +478,7 @@ struct MathDailyPracticeView: View {
                             .fill(getOptionBackgroundColor(option: option, correctAnswer: question.correctAnswer))
                     )
                 }
-                .disabled(showAnswerFeedback)
+                .disabled(showAnswerFeedback || submittedQuestions.contains(quizManager.currentQuestionIndex))
             }
         }
     }
@@ -490,6 +491,9 @@ struct MathDailyPracticeView: View {
         if quizManager.currentQuestionIndex < quizManager.userAnswers.count {
             quizManager.userAnswers[quizManager.currentQuestionIndex] = selectedAnswer
         }
+        
+        // 标记当前题目为已提交
+        submittedQuestions.insert(quizManager.currentQuestionIndex)
         
         // 检查答案
         if let currentQuestion = quizManager.currentQuestion {
@@ -561,14 +565,23 @@ struct MathDailyPracticeView: View {
                 quizManager.userAnswers[quizManager.currentQuestionIndex] = selectedAnswer
             }
             
-            // 重置反馈状态
-            showAnswerFeedback = false
-            isAnswerCorrect = false
-            correctAnswer = ""
-            
             // 移动到上一题
             quizManager.currentQuestionIndex -= 1
             selectedAnswer = quizManager.currentQuestionIndex < quizManager.userAnswers.count ? quizManager.userAnswers[quizManager.currentQuestionIndex] : ""
+            
+            // 如果上一题已经提交过，显示反馈状态
+            if submittedQuestions.contains(quizManager.currentQuestionIndex) {
+                showAnswerFeedback = true
+                if let currentQuestion = quizManager.currentQuestion {
+                    isAnswerCorrect = selectedAnswer == "\(currentQuestion.correctAnswer)"
+                    correctAnswer = "\(currentQuestion.correctAnswer)"
+                }
+            } else {
+                // 重置反馈状态
+                showAnswerFeedback = false
+                isAnswerCorrect = false
+                correctAnswer = ""
+            }
         }
     }
     
@@ -609,6 +622,7 @@ struct MathDailyPracticeView: View {
         isAnswerCorrect = false
         correctAnswer = ""
         selectedAnswer = ""
+        submittedQuestions = []
         quizManager.resetQuiz()
     }
 }

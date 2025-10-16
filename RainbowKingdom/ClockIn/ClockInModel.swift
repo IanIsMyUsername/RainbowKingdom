@@ -162,13 +162,46 @@ class ClockInManager: ObservableObject {
         
         var streak = 0
         let calendar = Calendar.current
-        var currentDate = Date()
+        var currentDate = calendar.startOfDay(for: Date())
         
         for record in sortedRecords {
-            if calendar.isDate(record.date, inSameDayAs: currentDate) {
+            let recordDate = calendar.startOfDay(for: record.date)
+            
+            // 检查是否是连续的一天
+            if calendar.isDate(recordDate, inSameDayAs: currentDate) {
                 streak += 1
                 currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate
             } else {
+                // 如果记录日期比当前检查日期早，说明有间隔，停止计算
+                if recordDate < currentDate {
+                    break
+                }
+                // 如果记录日期比当前检查日期晚，跳过这条记录
+                continue
+            }
+        }
+        
+        return streak
+    }
+    
+    // 计算所有科目的连续打卡天数
+    private func calculateOverallCurrentStreak() -> Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        
+        // 获取所有有打卡记录的日期（去重）
+        let allDates = Set(clockInRecords.map { calendar.startOfDay(for: $0.date) })
+            .sorted { $0 > $1 }
+        
+        var streak = 0
+        var currentDate = today
+        
+        for date in allDates {
+            if calendar.isDate(date, inSameDayAs: currentDate) {
+                streak += 1
+                currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate
+            } else {
+                // 如果日期不连续，停止计算
                 break
             }
         }
@@ -183,7 +216,7 @@ class ClockInManager: ObservableObject {
         
         stats.totalDays = Set(allRecords.map { Calendar.current.startOfDay(for: $0.date) }).count
         stats.completedDays = Set(completedRecords.map { Calendar.current.startOfDay(for: $0.date) }).count
-        stats.currentStreak = getCurrentStreak(subject: "英语") // 保持英语作为主要统计科目
+        stats.currentStreak = calculateOverallCurrentStreak() // 计算所有科目的连续打卡
         stats.longestStreak = calculateLongestStreak()
         stats.averageScore = completedRecords.isEmpty ? 0 : completedRecords.map { $0.percentage }.reduce(0, +) / Double(completedRecords.count)
         stats.lastPracticeDate = completedRecords.max { $0.date < $1.date }?.date

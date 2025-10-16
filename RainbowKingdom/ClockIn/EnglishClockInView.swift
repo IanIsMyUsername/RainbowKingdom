@@ -17,7 +17,6 @@ struct EnglishClockInView: View {
     @State private var selectedAnswer: String = ""
     @State private var showingResult = false
     @State private var quizStartTime: Date?
-    @State private var isQuizCompleted = false
     @State private var questions: [QuizQuestion] = []
     @State private var showError = false
     @State private var errorMessage = ""
@@ -25,6 +24,7 @@ struct EnglishClockInView: View {
     @State private var isAnswerCorrect = false
     @State private var correctAnswer = ""
     @State private var showSummary = false
+    @State private var submittedQuestions: Set<Int> = [] // 跟踪已提交的题目
     
     private let questionCount = 15
     
@@ -33,10 +33,8 @@ struct EnglishClockInView: View {
             VStack {
                 if showSummary {
                     summaryView
-                } else if !isQuizCompleted {
-                    quizContent
                 } else {
-                    completionView
+                    quizContent
                 }
             }
             .navigationTitle("英语打卡练习")
@@ -138,7 +136,7 @@ struct EnglishClockInView: View {
         VStack(spacing: 12) {
             ForEach(Array(options.enumerated()), id: \.offset) { index, option in
                 Button(action: {
-                    if !showAnswerFeedback {
+                    if !showAnswerFeedback && !submittedQuestions.contains(currentQuestionIndex) {
                         selectedAnswer = option
                     }
                 }) {
@@ -189,7 +187,7 @@ struct EnglishClockInView: View {
             
             Spacer()
             
-            if !showAnswerFeedback {
+            if !showAnswerFeedback && !submittedQuestions.contains(currentQuestionIndex) {
                 // 提交答案按钮
                 Button("提交答案") {
                     submitAnswer()
@@ -216,84 +214,6 @@ struct EnglishClockInView: View {
         }
     }
     
-    // 完成视图
-    private var completionView: some View {
-        VStack(spacing: 30) {
-            // 完成图标
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 80))
-                .foregroundColor(.green)
-            
-            // 完成标题
-            Text("打卡完成！")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .foregroundColor(.green)
-            
-            // 成绩信息
-            VStack(spacing: 15) {
-                Text("恭喜你完成了今日的英语打卡练习")
-                    .font(.title2)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.primary)
-                
-                let score = calculateScore()
-                let percentage = questions.count > 0 ? Double(score) / Double(questions.count) * 100 : 0
-                
-                VStack(spacing: 10) {
-                Text("得分: \(score) / \(questions.count)")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .foregroundColor(.blue)
-                    
-                    Text("\(String(format: "%.1f", percentage))%")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                    
-                    Text(getPerformanceText(percentage: percentage))
-                        .font(.headline)
-                        .foregroundColor(getPerformanceColor(percentage: percentage))
-                }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(Color(.systemBackground))
-                        .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
-                )
-            }
-            
-            // 操作按钮
-            VStack(spacing: 15) {
-                Button("再来一次") {
-                    restartQuiz()
-                }
-                .foregroundColor(.white)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.orange)
-                .cornerRadius(12)
-                
-                Button("查看历史记录") {
-                    // 这里可以导航到历史记录页面
-                }
-                .foregroundColor(.white)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.green)
-                .cornerRadius(12)
-                
-                Button("返回首页") {
-                    presentationMode.wrappedValue.dismiss()
-                }
-                .foregroundColor(.blue)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(12)
-            }
-        }
-        .padding()
-    }
     
     // 总结界面
     private var summaryView: some View {
@@ -360,22 +280,21 @@ struct EnglishClockInView: View {
             
             // 底部操作按钮
             VStack(spacing: 15) {
-                Button("查看完成界面") {
-                    showSummary = false
-                    isQuizCompleted = true
+                Button("返回主界面") {
+                    presentationMode.wrappedValue.dismiss()
                 }
                 .foregroundColor(.white)
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(
                     LinearGradient(
-                        gradient: Gradient(colors: [.blue, .purple]),
+                        gradient: Gradient(colors: [.green, .blue]),
                         startPoint: .leading,
                         endPoint: .trailing
                     )
                 )
                 .cornerRadius(15)
-                .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
+                .shadow(color: .green.opacity(0.3), radius: 5, x: 0, y: 3)
                 
                 Button("重新开始") {
                     restartQuiz()
@@ -424,7 +343,6 @@ struct EnglishClockInView: View {
         userAnswers = Array(repeating: "", count: min(questionCount, questions.count))
         selectedAnswer = ""
         quizStartTime = Date()
-        isQuizCompleted = false
     }
     
     // 获取最近两周的词汇，如果不够则从全部词汇补全
@@ -585,14 +503,23 @@ struct EnglishClockInView: View {
                 userAnswers[currentQuestionIndex] = selectedAnswer
             }
             
-            // 重置反馈状态
-            showAnswerFeedback = false
-            isAnswerCorrect = false
-            correctAnswer = ""
-            
             // 移动到上一题
             currentQuestionIndex -= 1
             selectedAnswer = currentQuestionIndex < userAnswers.count ? userAnswers[currentQuestionIndex] : ""
+            
+            // 如果上一题已经提交过，显示反馈状态
+            if submittedQuestions.contains(currentQuestionIndex) {
+                showAnswerFeedback = true
+                if let question = getCurrentQuestion() {
+                    isAnswerCorrect = selectedAnswer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == question.correctAnswer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                    correctAnswer = question.correctAnswer
+                }
+            } else {
+                // 重置反馈状态
+                showAnswerFeedback = false
+                isAnswerCorrect = false
+                correctAnswer = ""
+            }
         }
     }
     
@@ -675,13 +602,15 @@ struct EnglishClockInView: View {
         userAnswers = []
         selectedAnswer = ""
         showingResult = false
-        isQuizCompleted = false
         questions = []
         showError = false
         errorMessage = ""
         showAnswerFeedback = false
         isAnswerCorrect = false
         correctAnswer = ""
+        showSummary = false
+        submittedQuestions = []
+        quizStartTime = nil
         startQuiz()
     }
     
@@ -693,6 +622,9 @@ struct EnglishClockInView: View {
         if currentQuestionIndex < userAnswers.count {
             userAnswers[currentQuestionIndex] = selectedAnswer
         }
+        
+        // 标记当前题目为已提交
+        submittedQuestions.insert(currentQuestionIndex)
         
         // 检查答案
         if let currentQuestion = getCurrentQuestion() {
