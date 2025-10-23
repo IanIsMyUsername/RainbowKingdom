@@ -75,7 +75,7 @@ struct MathQuestion: Identifiable, Codable {
         // 如果无法生成足够的唯一选项，添加一些默认值
         while options.count < 4 {
             let fallbackAnswer = correctAnswer + options.count
-            if !options.contains(fallbackAnswer) && fallbackAnswer >= 1 && fallbackAnswer <= 25 {
+            if !options.contains(fallbackAnswer) && fallbackAnswer >= 1 && fallbackAnswer <= 40 {
                 options.append(fallbackAnswer)
             } else {
                 options.append(max(1, correctAnswer - options.count))
@@ -90,11 +90,11 @@ struct MathQuestion: Identifiable, Codable {
         // 确保范围至少包含6个数字，以便生成足够的错误答案
         let rangeSize = 6
         let lowerBound = max(1, correctAnswer - rangeSize/2)
-        let upperBound = min(25, correctAnswer + rangeSize/2)
+        let upperBound = min(40, correctAnswer + rangeSize/2)
         
         // 如果范围太小，扩展范围
         let actualLowerBound = max(1, min(lowerBound, upperBound - rangeSize + 1))
-        let actualUpperBound = min(25, max(upperBound, actualLowerBound + rangeSize - 1))
+        let actualUpperBound = min(40, max(upperBound, actualLowerBound + rangeSize - 1))
         
         let range = actualLowerBound...actualUpperBound
         var wrongAnswer = Int.random(in: range)
@@ -251,14 +251,14 @@ class MathQuizManager: ObservableObject {
         
         switch operationType {
         case .addition:
-            // 加法：确保结果在1-25之间
-            number1 = Int.random(in: 1...24)
-            number2 = Int.random(in: 1...25-number1)
+            // 加法：确保结果在1-40之间
+            number1 = Int.random(in: 1...39)
+            number2 = Int.random(in: 1...40-number1)
             actualOperation = .addition
             
         case .subtraction:
-            // 减法：确保被减数大于减数，结果在1-25之间
-            number1 = Int.random(in: 2...25)
+            // 减法：确保被减数大于减数，结果在1-40之间
+            number1 = Int.random(in: 2...40)
             number2 = Int.random(in: 1...number1-1)
             actualOperation = .subtraction
             
@@ -266,12 +266,12 @@ class MathQuizManager: ObservableObject {
             // 混合运算：随机选择加法或减法
             if Bool.random() {
                 // 加法
-                number1 = Int.random(in: 1...24)
-                number2 = Int.random(in: 1...25-number1)
+                number1 = Int.random(in: 1...39)
+                number2 = Int.random(in: 1...40-number1)
                 actualOperation = .addition
             } else {
                 // 减法
-                number1 = Int.random(in: 2...25)
+                number1 = Int.random(in: 2...40)
                 number2 = Int.random(in: 1...number1-1)
                 actualOperation = .subtraction
             }

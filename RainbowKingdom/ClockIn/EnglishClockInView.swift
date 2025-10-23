@@ -26,7 +26,7 @@ struct EnglishClockInView: View {
     @State private var showSummary = false
     @State private var submittedQuestions: Set<Int> = [] // 跟踪已提交的题目
     
-    private let questionCount = 15
+    private let questionCount = 30
     
     var body: some View {
         NavigationView {

@@ -78,7 +78,7 @@ struct MathDailyPracticeView: View {
                 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("• 共20道题目")
-                    Text("• 数字范围：25以内")
+                    Text("• 数字范围：40以内")
                     Text("• 包含加法和减法")
                     Text("• 完成后自动打卡")
                 }

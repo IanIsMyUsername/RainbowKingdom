@@ -228,7 +228,7 @@ struct DailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("20个选择题，考察最近1个月的单词和短语")
+                            Text("30个选择题，考察最近1个月的单词和短语")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }

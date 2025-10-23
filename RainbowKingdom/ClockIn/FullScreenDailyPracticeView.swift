@@ -359,7 +359,7 @@ struct FullScreenDailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("15个选择题，考察最近2周的单词和短语")
+                            Text("30个选择题，考察最近2周的单词和短语")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
