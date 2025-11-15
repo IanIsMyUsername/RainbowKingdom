@@ -23,32 +23,49 @@ struct MathQuestion: Identifiable, Codable {
     let id = UUID()
     let number1: Int
     let number2: Int
+    let number3: Int
     let operation: MathOperationType
+    let operation2: MathOperationType
     let question: String
     let correctAnswer: Int
     let options: [Int]? // 选择题选项
     
-    init(number1: Int, number2: Int, operation: MathOperationType) {
+    init(number1: Int, number2: Int, number3: Int, operation: MathOperationType, operation2: MathOperationType) {
         self.number1 = number1
         self.number2 = number2
+        self.number3 = number3
         self.operation = operation
+        self.operation2 = operation2
         
-        // 先计算正确答案
+        // 先计算中间结果和最终答案
+        let intermediateResult: Int
         let correctAnswer: Int
         let question: String
         
+        // 计算第一个运算的结果
         switch operation {
         case .addition:
-            question = "\(number1) + \(number2) = ?"
-            correctAnswer = number1 + number2
+            intermediateResult = number1 + number2
         case .subtraction:
-            question = "\(number1) - \(number2) = ?"
-            correctAnswer = number1 - number2
+            intermediateResult = number1 - number2
         case .mixed:
-            // 这种情况不应该发生，因为我们在generateSingleQuestion中已经确定了具体运算类型
-            question = "\(number1) + \(number2) = ?"
-            correctAnswer = number1 + number2
+            intermediateResult = number1 + number2
         }
+        
+        // 计算第二个运算的结果（最终答案）
+        switch operation2 {
+        case .addition:
+            correctAnswer = intermediateResult + number3
+        case .subtraction:
+            correctAnswer = intermediateResult - number3
+        case .mixed:
+            correctAnswer = intermediateResult + number3
+        }
+        
+        // 构建题目字符串
+        let op1Symbol = operation == .addition ? "+" : "-"
+        let op2Symbol = operation2 == .addition ? "+" : "-"
+        question = "\(number1) \(op1Symbol) \(number2) \(op2Symbol) \(number3) = ?"
         
         self.question = question
         self.correctAnswer = correctAnswer
@@ -72,13 +89,23 @@ struct MathQuestion: Identifiable, Codable {
             attempts += 1
         }
         
-        // 如果无法生成足够的唯一选项，添加一些默认值
+        // 如果无法生成足够的唯一选项，添加一些默认值（确保在1-40范围内）
         while options.count < 4 {
-            let fallbackAnswer = correctAnswer + options.count
-            if !options.contains(fallbackAnswer) && fallbackAnswer >= 1 && fallbackAnswer <= 40 {
-                options.append(fallbackAnswer)
+            let fallbackAnswer1 = min(40, max(1, correctAnswer + options.count))
+            let fallbackAnswer2 = min(40, max(1, correctAnswer - options.count))
+            
+            if !options.contains(fallbackAnswer1) && fallbackAnswer1 >= 1 && fallbackAnswer1 <= 40 {
+                options.append(fallbackAnswer1)
+            } else if !options.contains(fallbackAnswer2) && fallbackAnswer2 >= 1 && fallbackAnswer2 <= 40 {
+                options.append(fallbackAnswer2)
             } else {
-                options.append(max(1, correctAnswer - options.count))
+                // 如果都重复，尝试其他值
+                let alternative = min(40, max(1, correctAnswer + options.count * 2))
+                if !options.contains(alternative) {
+                    options.append(alternative)
+                } else {
+                    options.append(max(1, min(40, correctAnswer - options.count * 2)))
+                }
             }
         }
         
@@ -230,7 +257,7 @@ class MathQuizManager: ObservableObject {
         
         while questions.count < count && attempts < maxAttempts {
             let question = generateSingleQuestion(operationType: operationType)
-            let questionKey = "\(question.number1)\(question.operation.rawValue)\(question.number2)"
+            let questionKey = "\(question.number1)\(question.operation.rawValue)\(question.number2)\(question.operation2.rawValue)\(question.number3)"
             
             // 检查是否重复
             if !usedQuestions.contains(questionKey) {
@@ -243,41 +270,108 @@ class MathQuizManager: ObservableObject {
         return questions
     }
     
-    // 生成单个题目
+    // 生成单个题目（连续加减2个数）
     private func generateSingleQuestion(operationType: MathOperationType) -> MathQuestion {
-        let number1: Int
-        let number2: Int
-        let actualOperation: MathOperationType
+        // 初始化默认值（确保所有变量都有初始值）
+        var number1 = 10
+        var number2 = 5
+        var number3 = 3
+        var operation1: MathOperationType = .addition
+        var operation2: MathOperationType = .subtraction
+        var attempts = 0
+        let maxAttempts = 100 // 防止无限循环
         
-        switch operationType {
-        case .addition:
-            // 加法：确保结果在1-40之间
-            number1 = Int.random(in: 1...39)
-            number2 = Int.random(in: 1...40-number1)
-            actualOperation = .addition
+        repeat {
+            // 随机生成第一个数字（范围1-40）
+            number1 = Int.random(in: 1...40)
             
-        case .subtraction:
-            // 减法：确保被减数大于减数，结果在1-40之间
-            number1 = Int.random(in: 2...40)
-            number2 = Int.random(in: 1...number1-1)
-            actualOperation = .subtraction
-            
-        case .mixed:
-            // 混合运算：随机选择加法或减法
-            if Bool.random() {
-                // 加法
-                number1 = Int.random(in: 1...39)
-                number2 = Int.random(in: 1...40-number1)
-                actualOperation = .addition
+            // 随机选择第一个运算符
+            if operationType == .addition {
+                operation1 = .addition
+            } else if operationType == .subtraction {
+                operation1 = .subtraction
             } else {
-                // 减法
-                number1 = Int.random(in: 2...40)
-                number2 = Int.random(in: 1...number1-1)
-                actualOperation = .subtraction
+                // mixed: 随机选择
+                operation1 = Bool.random() ? .addition : .subtraction
             }
-        }
+            
+            // 根据第一个运算符生成第二个数字，确保中间结果在1-40之间
+            let intermediateResult: Int
+            if operation1 == .addition {
+                // 加法：中间结果 = number1 + number2，需要 >= 1 且 <= 40
+                // number2 可以是 1 到 (40 - number1)
+                let maxNumber2 = 40 - number1
+                guard maxNumber2 >= 1 else {
+                    attempts += 1
+                    continue
+                }
+                number2 = Int.random(in: 1...maxNumber2)
+                intermediateResult = number1 + number2
+            } else {
+                // 减法：中间结果 = number1 - number2，需要 >= 1 且 <= 40
+                // 确保 number1 > number2，且中间结果 >= 1
+                guard number1 > 1 else {
+                    attempts += 1
+                    continue
+                }
+                number2 = Int.random(in: 1...(number1 - 1))
+                intermediateResult = number1 - number2
+            }
+            
+            // 确保中间结果在1-40之间
+            guard intermediateResult >= 1 && intermediateResult <= 40 else {
+                attempts += 1
+                continue
+            }
+            
+            // 随机选择第二个运算符
+            if operationType == .addition {
+                operation2 = .addition
+            } else if operationType == .subtraction {
+                operation2 = .subtraction
+            } else {
+                // mixed: 随机选择
+                operation2 = Bool.random() ? .addition : .subtraction
+            }
+            
+            // 根据第二个运算符生成第三个数字，确保最终结果在1-40之间
+            let finalResult: Int
+            if operation2 == .addition {
+                // 加法：最终结果 = intermediateResult + number3，需要 >= 1 且 <= 40
+                // number3 可以是 1 到 (40 - intermediateResult)
+                let maxNumber3 = 40 - intermediateResult
+                guard maxNumber3 >= 1 else {
+                    attempts += 1
+                    continue
+                }
+                number3 = Int.random(in: 1...maxNumber3)
+                finalResult = intermediateResult + number3
+            } else {
+                // 减法：最终结果 = intermediateResult - number3，需要 >= 1 且 <= 40
+                // 确保 intermediateResult > number3，且最终结果 >= 1
+                guard intermediateResult > 1 else {
+                    attempts += 1
+                    continue
+                }
+                number3 = Int.random(in: 1...(intermediateResult - 1))
+                finalResult = intermediateResult - number3
+            }
+            
+            // 确保最终结果在1-40之间
+            guard finalResult >= 1 && finalResult <= 40 else {
+                attempts += 1
+                continue
+            }
+            
+            // 成功生成有效题目，退出循环
+            break
+            
+        } while attempts < maxAttempts
         
-        return MathQuestion(number1: number1, number2: number2, operation: actualOperation)
+        // 如果尝试次数过多，变量已经使用默认值（10 + 5 - 3 = 12）
+        // 验证默认值：10 + 5 = 15 (<= 40), 15 - 3 = 12 (1-40范围内) ✓
+        
+        return MathQuestion(number1: number1, number2: number2, number3: number3, operation: operation1, operation2: operation2)
     }
     
     // 计算正确答案数量

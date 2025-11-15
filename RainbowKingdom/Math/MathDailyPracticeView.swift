@@ -67,7 +67,7 @@ struct MathDailyPracticeView: View {
                 .font(.system(size: 34, weight: .bold))
                 .foregroundColor(.blue)
             
-            Text("20道加减法题目")
+            Text("20道加减法题目，40以内连续加减2个数")
                 .font(.title2)
                 .foregroundColor(.gray)
             
@@ -644,13 +644,15 @@ struct MathDailyPracticeView: View {
             // 生成选择题选项
             let options = mathQuestion.options?.map { "\($0)" } ?? []
             
+            let op1Name = mathQuestion.operation.displayName
+            let op2Name = mathQuestion.operation2.displayName
             return QuizQuestion(
                 vocabulary: vocabulary,
                 questionType: .multipleChoice,
                 question: mathQuestion.question,
                 correctAnswer: "\(mathQuestion.correctAnswer)",
                 options: options,
-                hint: "类型：\(mathQuestion.operation.displayName)"
+                hint: "类型：连续运算（\(op1Name) 和 \(op2Name)）"
             )
         }
     }

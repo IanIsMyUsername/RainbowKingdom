@@ -264,7 +264,7 @@ struct DailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("20道加减法题目，20以内数字运算")
+                            Text("20道加减法题目，40以内连续加减2个数")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }

@@ -375,13 +375,15 @@ struct MathQuizView: View {
             // 生成选择题选项
             let options = mathQuestion.options?.map { "\($0)" } ?? []
             
+            let op1Name = mathQuestion.operation.displayName
+            let op2Name = mathQuestion.operation2.displayName
             return QuizQuestion(
                 vocabulary: vocabulary,
                 questionType: .multipleChoice,
                 question: mathQuestion.question,
                 correctAnswer: "\(mathQuestion.correctAnswer)",
                 options: options,
-                hint: "类型：\(mathQuestion.operation.displayName)"
+                hint: "类型：连续运算（\(op1Name) 和 \(op2Name)）"
             )
         }
     }
