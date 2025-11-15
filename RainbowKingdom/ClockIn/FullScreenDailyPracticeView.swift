@@ -7,6 +7,13 @@
 
 import SwiftUI
 
+// 让 Date 符合 Identifiable 协议，以便在 sheet 中使用
+extension Date: Identifiable {
+    public var id: TimeInterval {
+        return self.timeIntervalSince1970
+    }
+}
+
 struct FullScreenDailyPracticeView: View {
     @StateObject private var clockInManager = ClockInManager()
     @StateObject private var vocabularyManager = VocabularyManager()
@@ -14,8 +21,7 @@ struct FullScreenDailyPracticeView: View {
     @State private var showingEnglishFillBlank = false
     @State private var showingMathPractice = false
     @State private var showingHistory = false
-    @State private var showingDayDetail = false
-    @State private var selectedDate: Date = Date()
+    @State private var selectedDate: Date? = nil
     
     var body: some View {
         ScrollView {
@@ -57,8 +63,8 @@ struct FullScreenDailyPracticeView: View {
             ClockInHistoryView()
                 .environmentObject(clockInManager)
         }
-        .sheet(isPresented: $showingDayDetail) {
-            DayDetailView(selectedDate: selectedDate)
+        .sheet(item: $selectedDate) { date in
+            DayDetailView(selectedDate: date)
                 .environmentObject(clockInManager)
         }
     }
@@ -137,7 +143,6 @@ struct FullScreenDailyPracticeView: View {
         
         return Button(action: {
             selectedDate = date
-            showingDayDetail = true
         }) {
             VStack(spacing: 2) {
                 Text("\(day)")
