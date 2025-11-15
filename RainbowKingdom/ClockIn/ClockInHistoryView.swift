@@ -11,7 +11,6 @@ struct ClockInHistoryView: View {
     @EnvironmentObject var clockInManager: ClockInManager
     @Environment(\.presentationMode) var presentationMode
     @State private var selectedTimeRange: TimeRange = .month
-    @State private var showingDetail = false
     @State private var selectedRecord: ClockInRecord?
     
     enum TimeRange: String, CaseIterable {
@@ -52,11 +51,9 @@ struct ClockInHistoryView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingDetail) {
-            if let record = selectedRecord {
-                ClockInDetailView(record: record)
-                    .environmentObject(clockInManager)
-            }
+        .sheet(item: $selectedRecord) { record in
+            ClockInDetailView(record: record)
+                .environmentObject(clockInManager)
         }
     }
     
@@ -148,9 +145,6 @@ struct ClockInHistoryView: View {
                             ForEach(groupedRecords[date] ?? []) { record in
                                 ClockInRecordRow(record: record) {
                                     selectedRecord = record
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                        showingDetail = true
-                                    }
                                 }
                             }
                         }
