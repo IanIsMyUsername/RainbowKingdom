@@ -130,9 +130,10 @@ struct FullScreenDailyPracticeView: View {
         let isFuture = date > Calendar.current.startOfDay(for: Date())
         
         // 只有过去的日期才检查打卡情况
-        let hasEnglishCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "英语") : false
+        let hasEnglishCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "英语翻译") : false
+        let hasEnglishFillBlankCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "英语填空") : false
         let hasMathCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "数学") : false
-        let hasAnyCheckIn = hasEnglishCheckIn || hasMathCheckIn
+        let hasAnyCheckIn = hasEnglishCheckIn || hasEnglishFillBlankCheckIn || hasMathCheckIn
         
         return Button(action: {
             selectedDate = date
@@ -150,6 +151,11 @@ struct FullScreenDailyPracticeView: View {
                         if hasEnglishCheckIn {
                             Circle()
                                 .fill(.blue)
+                                .frame(width: 4, height: 4)
+                        }
+                        if hasEnglishFillBlankCheckIn {
+                            Circle()
+                                .fill(.purple)
                                 .frame(width: 4, height: 4)
                         }
                         if hasMathCheckIn {
@@ -197,7 +203,8 @@ struct FullScreenDailyPracticeView: View {
                 .foregroundColor(.primary)
             
             let overallStats = clockInManager.getOverallStats()
-            let englishStats = clockInManager.getSubjectStats(for: "英语")
+            let englishStats = clockInManager.getSubjectStats(for: "英语翻译")
+            let englishFillBlankStats = clockInManager.getSubjectStats(for: "英语填空")
             let mathStats = clockInManager.getSubjectStats(for: "数学")
             
             // 内容区域 - 两行
@@ -225,29 +232,33 @@ struct FullScreenDailyPracticeView: View {
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity)
-                    
-                    VStack {
-                        Text(String(format: "%.1f", overallStats.averageScore))
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                        Text("平均分数")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
                 }
                 
-                // 第二行：科目统计
-                HStack(spacing: 12) {
+                // 第二行：科目统计（三列）
+                HStack(spacing: 8) {
                     VStack {
                         Text("\(englishStats.completedDays)")
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(.blue)
-                        Text("英语")
-                            .font(.caption)
+                        Text("英语翻译")
+                            .font(.caption2)
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    VStack {
+                        Text("\(englishFillBlankStats.completedDays)")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.purple)
+                        Text("英语填空")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                     }
                     .frame(maxWidth: .infinity)
                     
@@ -257,8 +268,10 @@ struct FullScreenDailyPracticeView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.green)
                         Text("数学")
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -281,20 +294,46 @@ struct FullScreenDailyPracticeView: View {
                 .foregroundColor(.primary)
             
             VStack(spacing: 6) {
-                // 英语打卡状态
+                // 英语翻译打卡状态
                 HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "英语") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语") ? .green : .gray)
+                    Image(systemName: clockInManager.hasCheckedInToday(subject: "英语翻译") ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
                         .font(.caption)
                     
                     VStack(alignment: .leading) {
-                        Text("英语")
+                        Text("英语翻译")
                             .font(.caption)
                             .fontWeight(.semibold)
-                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语") ? .green : .gray)
+                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
                         
-                        if let englishRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语") {
+                        if let englishRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语翻译") {
                             Text("\(englishRecord.score)/\(englishRecord.totalQuestions)")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("未完成")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                
+                // 英语填空打卡状态
+                HStack {
+                    Image(systemName: clockInManager.hasCheckedInToday(subject: "英语填空") ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
+                        .font(.caption)
+                    
+                    VStack(alignment: .leading) {
+                        Text("英语填空")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
+                        
+                        if let englishFillBlankRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语填空") {
+                            Text("\(englishFillBlankRecord.score)/\(englishFillBlankRecord.totalQuestions)")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         } else {
@@ -361,7 +400,7 @@ struct FullScreenDailyPracticeView: View {
                             .foregroundColor(.white)
                         
                         VStack(alignment: .leading) {
-                            Text("英语打卡练习")
+                            Text("英语翻译练习")
                                 .font(.headline)
                                 .foregroundColor(.white)
                             

@@ -189,21 +189,31 @@ class ClockInManager: ObservableObject {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         
-        // 获取所有有打卡记录的日期（去重）
-        let allDates = Set(clockInRecords.map { calendar.startOfDay(for: $0.date) })
+        // 获取所有已完成打卡记录的日期（去重，每天只算一次）
+        let allDates = Set(clockInRecords
+            .filter { $0.isCompleted }
+            .map { calendar.startOfDay(for: $0.date) })
             .sorted { $0 > $1 }
+        
+        guard !allDates.isEmpty else { return 0 }
         
         var streak = 0
         var currentDate = today
+        
+        // 如果今天没有打卡记录，从昨天开始计算
+        if !allDates.contains(where: { calendar.isDate($0, inSameDayAs: today) }) {
+            currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate
+        }
         
         for date in allDates {
             if calendar.isDate(date, inSameDayAs: currentDate) {
                 streak += 1
                 currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate
-            } else {
-                // 如果日期不连续，停止计算
+            } else if date < currentDate {
+                // 如果记录日期比当前检查日期早，说明有间隔，停止计算
                 break
             }
+            // 如果记录日期比当前检查日期晚，跳过这条记录（不应该发生，因为已排序）
         }
         
         return streak
@@ -226,28 +236,27 @@ class ClockInManager: ObservableObject {
     
     // 计算最长连续打卡天数
     private func calculateLongestStreak() -> Int {
-        let sortedRecords = clockInRecords
-            .filter { $0.isCompleted }
-            .sorted { $0.date < $1.date }
-        
-        var maxStreak = 0
-        var currentStreak = 0
         let calendar = Calendar.current
-        var lastDate: Date?
         
-        for record in sortedRecords {
-            if let last = lastDate {
-                let daysBetween = calendar.dateComponents([.day], from: last, to: record.date).day ?? 0
-                if daysBetween == 1 {
-                    currentStreak += 1
-                } else {
-                    maxStreak = max(maxStreak, currentStreak)
-                    currentStreak = 1
-                }
+        // 获取所有已完成记录的日期（去重，每天只算一次）
+        let completedDates = Set(clockInRecords
+            .filter { $0.isCompleted }
+            .map { calendar.startOfDay(for: $0.date) })
+            .sorted { $0 < $1 }
+        
+        guard !completedDates.isEmpty else { return 0 }
+        
+        var maxStreak = 1
+        var currentStreak = 1
+        
+        for i in 1..<completedDates.count {
+            let daysBetween = calendar.dateComponents([.day], from: completedDates[i - 1], to: completedDates[i]).day ?? 0
+            if daysBetween == 1 {
+                currentStreak += 1
             } else {
+                maxStreak = max(maxStreak, currentStreak)
                 currentStreak = 1
             }
-            lastDate = record.date
         }
         
         return max(maxStreak, currentStreak)
@@ -257,7 +266,7 @@ class ClockInManager: ObservableObject {
     private func updateTodayRecord() {
         let today = Calendar.current.startOfDay(for: Date())
         todayRecord = clockInRecords.first { record in
-            Calendar.current.isDate(record.date, inSameDayAs: today) && record.subject == "英语"
+            Calendar.current.isDate(record.date, inSameDayAs: today) && record.subject == "英语翻译"
         }
     }
     
@@ -294,7 +303,7 @@ class ClockInManager: ObservableObject {
         if let date20 = calendar.date(from: DateComponents(year: 2025, month: 9, day: 20)) {
             let englishRecord20 = ClockInRecord(
                 date: date20,
-                subject: "英语",
+                subject: "英语翻译",
                 score: 10,
                 totalQuestions: 10,
                 timeSpent: 300, // 5分钟
@@ -323,7 +332,7 @@ class ClockInManager: ObservableObject {
         if let date21 = calendar.date(from: DateComponents(year: 2025, month: 9, day: 21)) {
             let englishRecord21 = ClockInRecord(
                 date: date21,
-                subject: "英语",
+                subject: "英语翻译",
                 score: 10,
                 totalQuestions: 10,
                 timeSpent: 280, // 4分40秒
@@ -362,7 +371,35 @@ class ClockInManager: ObservableObject {
     private func loadClockInRecords() {
         if let data = userDefaults.data(forKey: clockInRecordsKey),
            let decoded = try? JSONDecoder().decode([ClockInRecord].self, from: data) {
-            clockInRecords = decoded
+            // 迁移旧的"英语"记录为"英语翻译"
+            var migratedRecords = decoded
+            var migratedCount = 0
+            for i in 0..<migratedRecords.count {
+                if migratedRecords[i].subject == "英语" {
+                    // 由于ClockInRecord是struct，需要重新创建
+                    let oldRecord = migratedRecords[i]
+                    let newRecord = ClockInRecord(
+                        date: oldRecord.date,
+                        subject: "英语翻译",
+                        score: oldRecord.score,
+                        totalQuestions: oldRecord.totalQuestions,
+                        timeSpent: oldRecord.timeSpent,
+                        completedDate: oldRecord.completedDate,
+                        questions: oldRecord.questions,
+                        userAnswers: oldRecord.userAnswers
+                    )
+                    migratedRecords[i] = newRecord
+                    migratedCount += 1
+                }
+            }
+            
+            clockInRecords = migratedRecords
+            
+            // 如果有迁移，保存更新后的记录
+            if migratedCount > 0 {
+                saveClockInRecords()
+                print("已迁移 \(migratedCount) 条'英语'记录为'英语翻译'")
+            }
         }
     }
     

@@ -11,6 +11,7 @@ struct DailyPracticeView: View {
     @StateObject private var clockInManager = ClockInManager()
     @StateObject private var vocabularyManager = VocabularyManager()
     @State private var showingEnglishPractice = false
+    @State private var showingEnglishTranslation = false
     @State private var showingEnglishFillBlank = false
     @State private var showingMathPractice = false
     @State private var showingHistory = false
@@ -74,7 +75,8 @@ struct DailyPracticeView: View {
                 .foregroundColor(.primary)
             
             let overallStats = clockInManager.getOverallStats()
-            let englishStats = clockInManager.getSubjectStats(for: "英语")
+            let englishStats = clockInManager.getSubjectStats(for: "英语翻译")
+            let englishFillBlankStats = clockInManager.getSubjectStats(for: "英语填空")
             let mathStats = clockInManager.getSubjectStats(for: "数学")
             
             VStack(spacing: 15) {
@@ -99,26 +101,26 @@ struct DailyPracticeView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
-                    VStack {
-                        Text(String(format: "%.1f", overallStats.averageScore))
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                        Text("平均分数")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
                 }
                 
                 // 科目统计
-                HStack(spacing: 30) {
+                HStack(spacing: 20) {
                     VStack {
                         Text("\(englishStats.completedDays)")
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(.blue)
-                        Text("英语")
+                        Text("英语翻译")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack {
+                        Text("\(englishFillBlankStats.completedDays)")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.purple)
+                        Text("英语填空")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -152,19 +154,44 @@ struct DailyPracticeView: View {
                 .foregroundColor(.primary)
             
             VStack(spacing: 10) {
-                // 英语打卡状态
+                // 英语翻译打卡状态
                 HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "英语") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语") ? .green : .gray)
+                    Image(systemName: clockInManager.hasCheckedInToday(subject: "英语翻译") ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
                         .font(.title2)
                     
                     VStack(alignment: .leading) {
-                        Text("英语练习")
+                        Text("英语翻译")
                             .font(.headline)
-                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语") ? .green : .gray)
+                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
                         
-                        if let englishRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语") {
-                            Text("得分: \(englishRecord.score)/\(englishRecord.totalQuestions) (\(String(format: "%.1f", englishRecord.percentage))%)")
+                        if let englishTranslationRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语翻译") {
+                            Text("得分: \(englishTranslationRecord.score)/\(englishTranslationRecord.totalQuestions) (\(String(format: "%.1f", englishTranslationRecord.percentage))%)")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("未完成")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                
+                // 英语填空打卡状态
+                HStack {
+                    Image(systemName: clockInManager.hasCheckedInToday(subject: "英语填空") ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
+                        .font(.title2)
+                    
+                    VStack(alignment: .leading) {
+                        Text("英语填空")
+                            .font(.headline)
+                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
+                        
+                        if let englishFillBlankRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语填空") {
+                            Text("得分: \(englishFillBlankRecord.score)/\(englishFillBlankRecord.totalQuestions) (\(String(format: "%.1f", englishFillBlankRecord.percentage))%)")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         } else {
@@ -230,7 +257,7 @@ struct DailyPracticeView: View {
                             .foregroundColor(.white)
                         
                         VStack(alignment: .leading) {
-                            Text("英语打卡练习")
+                            Text("英语翻译练习")
                                 .font(.headline)
                                 .foregroundColor(.white)
                             

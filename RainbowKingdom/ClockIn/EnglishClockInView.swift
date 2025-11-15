@@ -37,7 +37,7 @@ struct EnglishClockInView: View {
                     quizContent
                 }
             }
-            .navigationTitle("英语打卡练习")
+            .navigationTitle("英语翻译练习")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -537,7 +537,7 @@ struct EnglishClockInView: View {
         // 创建打卡记录
         let record = ClockInRecord(
             date: Date(),
-            subject: "英语",
+            subject: "英语翻译",
             score: score,
             totalQuestions: questions.count,
             timeSpent: timeSpent,
