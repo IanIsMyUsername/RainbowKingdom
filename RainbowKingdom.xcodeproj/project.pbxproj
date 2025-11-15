@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		5222DE062E73086500FAB58B /* RainbowKingdom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = RainbowKingdom.app; path = "/Users/yizhou.chen/Documents/private/code/RainbowKingdom/build/Debug-iphoneos/RainbowKingdom.app"; sourceTree = "<absolute>"; };
+		52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RainbowKingdom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -40,6 +40,7 @@
 		5222DE072E73086500FAB58B /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -64,7 +65,7 @@
 			);
 			name = RainbowKingdom;
 			productName = RainbowKingdom;
-			productReference = 5222DE062E73086500FAB58B /* RainbowKingdom.app */;
+			productReference = 52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

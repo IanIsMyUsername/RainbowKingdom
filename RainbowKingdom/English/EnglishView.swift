@@ -49,7 +49,7 @@ struct EnglishView: View {
                     .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
                 }
                 
-                NavigationLink(destination: WordCompletionView(vocabularyManager: vocabularyManager)) {
+                NavigationLink(destination: WordCompletionView(vocabularyManager: vocabularyManager, maxQuestions: 10)) {
                     HStack {
                         Image(systemName: "pencil.and.outline")
                             .font(.title2)

@@ -11,6 +11,7 @@ struct FullScreenDailyPracticeView: View {
     @StateObject private var clockInManager = ClockInManager()
     @StateObject private var vocabularyManager = VocabularyManager()
     @State private var showingEnglishPractice = false
+    @State private var showingEnglishFillBlank = false
     @State private var showingMathPractice = false
     @State private var showingHistory = false
     @State private var showingDayDetail = false
@@ -40,6 +41,11 @@ struct FullScreenDailyPracticeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .fullScreenCover(isPresented: $showingEnglishPractice) {
             EnglishClockInView()
+                .environmentObject(clockInManager)
+                .environmentObject(vocabularyManager)
+        }
+        .fullScreenCover(isPresented: $showingEnglishFillBlank) {
+            EnglishFillBlankView()
                 .environmentObject(clockInManager)
                 .environmentObject(vocabularyManager)
         }
@@ -374,6 +380,42 @@ struct FullScreenDailyPracticeView: View {
                     .background(
                         LinearGradient(
                             gradient: Gradient(colors: [.blue, .purple]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(12)
+                }
+                
+                // 英语填空练习按钮
+                Button(action: {
+                    showingEnglishFillBlank = true
+                }) {
+                    HStack {
+                        Image(systemName: "pencil.and.outline")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                        
+                        VStack(alignment: .leading) {
+                            Text("英语填空练习")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            
+                            Text("5个填空题，根据中文和提示填写完整单词")
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.9))
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                    }
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.purple, .pink]),
                             startPoint: .leading,
                             endPoint: .trailing
                         )

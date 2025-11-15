@@ -9,6 +9,7 @@ import SwiftUI
 
 struct WordCompletionView: View {
     @ObservedObject var vocabularyManager: VocabularyManager
+    @Environment(\.presentationMode) var presentationMode
     @State private var currentVocabularyIndex = 0
     @State private var userAnswer = ""
     @State private var showResult = false
@@ -17,6 +18,8 @@ struct WordCompletionView: View {
     @State private var completedCount = 0
     @State private var showScore = false
     @State private var shuffledVocabularies: [Vocabulary] = []
+    
+    let maxQuestions: Int
     
     private var currentVocabulary: Vocabulary? {
         guard !shuffledVocabularies.isEmpty && currentVocabularyIndex < shuffledVocabularies.count else {
@@ -27,14 +30,50 @@ struct WordCompletionView: View {
     
     private var maskedVocabulary: String {
         guard let vocabulary = currentVocabulary else { return "" }
-        let vocabularyLength = vocabulary.english.count
-        let maskCount = max(1, vocabularyLength / 3) // 至少显示1个字母
-        let visibleCount = vocabularyLength - maskCount
+        let fullText = vocabulary.english
         
-        let visiblePart = String(vocabulary.english.prefix(visibleCount))
-        let maskedPart = String(repeating: "_", count: maskCount)
+        // 按空格分割成单词
+        let words = fullText.components(separatedBy: " ")
         
-        return visiblePart + maskedPart
+        var maskedWords: [String] = []
+        
+        for word in words {
+            let maskedWord = maskSingleWord(word)
+            maskedWords.append(maskedWord)
+        }
+        
+        return maskedWords.joined(separator: " ")
+    }
+    
+    private func maskSingleWord(_ word: String) -> String {
+        // 只计算字母的数量
+        let letters = word.filter { $0.isLetter }
+        let letterCount = letters.count
+        
+        guard letterCount > 0 else { return word }
+        
+        // 决定遮挡多少个字母（后1/3）
+        let maskCount = max(1, letterCount / 3)
+        let visibleLetterCount = letterCount - maskCount
+        
+        var result = ""
+        var letterIndex = 0
+        
+        for char in word {
+            if char.isLetter {
+                if letterIndex < visibleLetterCount {
+                    result.append(char)
+                } else {
+                    result.append("_")
+                }
+                letterIndex += 1
+            } else {
+                // 保留非字母字符（连字符、撇号等）
+                result.append(char)
+            }
+        }
+        
+        return result
     }
     
     var body: some View {
@@ -146,6 +185,8 @@ struct WordCompletionView: View {
                             .multilineTextAlignment(.center)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
+                            .textContentType(.none)
+                            .keyboardType(.asciiCapable)
                         
                         if showResult {
                             HStack {
@@ -245,6 +286,13 @@ struct WordCompletionView: View {
         }
         .navigationTitle("词汇补全")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("返回") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+            }
+        }
         .onAppear {
             shuffleVocabularies()
         }
@@ -301,7 +349,8 @@ struct WordCompletionView: View {
     }
     
     private func shuffleVocabularies() {
-        shuffledVocabularies = vocabularyManager.currentGroupVocabularies.shuffled()
+        let allVocabularies = vocabularyManager.currentGroupVocabularies.shuffled()
+        shuffledVocabularies = Array(allVocabularies.prefix(maxQuestions))
     }
     
     private var typeColor: Color {
@@ -419,6 +468,6 @@ struct ScoreView: View {
 
 #Preview {
     NavigationView {
-        WordCompletionView(vocabularyManager: VocabularyManager())
+        WordCompletionView(vocabularyManager: VocabularyManager(), maxQuestions: 10)
     }
 }
