@@ -519,7 +519,6 @@ struct DayDetailView: View {
     let selectedDate: Date
     @EnvironmentObject var clockInManager: ClockInManager
     @Environment(\.presentationMode) var presentationMode
-    @State private var showingRecordDetail = false
     @State private var selectedRecord: ClockInRecord?
     
     var body: some View {
@@ -548,14 +547,9 @@ struct DayDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingRecordDetail) {
-            if let record = selectedRecord {
-                ClockInDetailView(record: record)
-                    .environmentObject(clockInManager)
-            } else {
-                // 如果selectedRecord为nil，显示空视图
-                EmptyView()
-            }
+        .sheet(item: $selectedRecord) { record in
+            ClockInDetailView(record: record)
+                .environmentObject(clockInManager)
         }
     }
     
@@ -606,9 +600,6 @@ struct DayDetailView: View {
             ForEach(dayRecords) { record in
                 RecordDetailCard(record: record) {
                     selectedRecord = record
-                    DispatchQueue.main.async {
-                        showingRecordDetail = true
-                    }
                 }
             }
         }
