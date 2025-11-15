@@ -2,7 +2,7 @@
 //  WordCompletionView.swift
 //  RainbowKingdom
 //
-//  Created by Yizhou Chen on 2025/9/11.
+//  Created by Yizhou Chen on 2025/11/15.
 //
 
 import SwiftUI
@@ -11,13 +11,18 @@ struct WordCompletionView: View {
     @ObservedObject var vocabularyManager: VocabularyManager
     @Environment(\.presentationMode) var presentationMode
     @State private var currentVocabularyIndex = 0
-    @State private var userAnswer = ""
+    @State private var userInputs: [String] = [] // 用户输入的字符
     @State private var showResult = false
     @State private var isCorrect = false
     @State private var score = 0
     @State private var completedCount = 0
     @State private var showScore = false
     @State private var shuffledVocabularies: [Vocabulary] = []
+    @State private var focusedIndex: Int? = nil
+    @State private var showKeyboard = false
+    @State private var isFirstAttempt = true
+    @State private var needsCorrection = false
+    @State private var currentInput = ""
     
     let maxQuestions: Int
     
@@ -28,31 +33,120 @@ struct WordCompletionView: View {
         return shuffledVocabularies[currentVocabularyIndex]
     }
     
-    private var maskedVocabulary: String {
-        guard let vocabulary = currentVocabulary else { return "" }
-        let fullText = vocabulary.english
-        
-        // 按空格分割成单词
-        let words = fullText.components(separatedBy: " ")
-        
-        var maskedWords: [String] = []
-        
-        for word in words {
-            let maskedWord = maskSingleWord(word)
-            maskedWords.append(maskedWord)
+    var body: some View {
+        VStack(spacing: 30) {
+            if showScore {
+                scoreView
+            } else if let vocabulary = currentVocabulary {
+                practiceView(vocabulary: vocabulary)
+            } else {
+                emptyStateView
+            }
         }
-        
-        return maskedWords.joined(separator: " ")
+        .navigationTitle("词汇补全")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("返回") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+            }
+        }
+        .onAppear {
+            shuffleVocabularies()
+        }
+    }
+    
+    private func practiceView(vocabulary: Vocabulary) -> some View {
+        VStack(spacing: 30) {
+            // 进度指示器
+            HStack {
+                Text("\(currentVocabularyIndex + 1) / \(shuffledVocabularies.count)")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                
+                Spacer()
+                
+                Text("得分: \(score)")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.blue)
+            }
+            .padding(.horizontal)
+            
+            Spacer()
+            
+            // 第一行：需要补全的英语（带提示）
+            Text(maskedWord(vocabulary.english))
+                .font(.system(size: 32, weight: .bold, design: .monospaced))
+                .foregroundColor(.blue)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            // 第二行：中文翻译
+            Text(vocabulary.chinese)
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            // 第三行：输入区域（下划线）
+            HStack {
+                Spacer()
+                inputAreaView(word: vocabulary.english)
+                Spacer()
+            }
+            .padding(.horizontal)
+            
+            // 反馈信息
+            if showResult {
+                HStack {
+                    Spacer()
+                    HStack(spacing: 12) {
+                        Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .foregroundColor(isCorrect ? .green : .red)
+                            .font(.title2)
+                        
+                        Text(isCorrect ? "正确！" : "错误")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(isCorrect ? .green : .red)
+                        
+                        if !isCorrect {
+                            Text("正确答案: \(vocabulary.english)")
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(isCorrect ? Color.green.opacity(0.1) : Color.red.opacity(0.1))
+                    )
+                    Spacer()
+                }
+            }
+            
+            Spacer()
+            
+            // 按钮区域
+            buttonArea
+                .padding(.horizontal)
+                .padding(.bottom, 30)
+        }
+    }
+    
+    private func maskedWord(_ word: String) -> String {
+        let words = word.components(separatedBy: " ")
+        return words.map { maskSingleWord($0) }.joined(separator: " ")
     }
     
     private func maskSingleWord(_ word: String) -> String {
-        // 只计算字母的数量
         let letters = word.filter { $0.isLetter }
         let letterCount = letters.count
-        
         guard letterCount > 0 else { return word }
         
-        // 决定遮挡多少个字母（后1/3）
         let maskCount = max(1, letterCount / 3)
         let visibleLetterCount = letterCount - maskCount
         
@@ -68,7 +162,6 @@ struct WordCompletionView: View {
                 }
                 letterIndex += 1
             } else {
-                // 保留非字母字符（连字符、撇号等）
                 result.append(char)
             }
         }
@@ -76,252 +169,177 @@ struct WordCompletionView: View {
         return result
     }
     
-    var body: some View {
-        VStack(spacing: 30) {
-            if showScore {
-                // 分数展示页面
-                ScoreView(score: score, total: completedCount, vocabularyManager: vocabularyManager)
-            } else if let vocabulary = currentVocabulary {
-                // 练习页面
-                VStack(spacing: 30) {
-                    // 筛选器和进度指示器
-                    VStack(spacing: 10) {
-                        // 组选择器
-                        HStack {
-                            Text("选择组:")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            
-                            Picker("选择组", selection: $vocabularyManager.selectedGroup) {
-                                Text("全部").tag("")
-                                ForEach(vocabularyManager.groupNames, id: \.self) { groupName in
-                                    Text(groupName).tag(groupName)
+    private func inputAreaView(word: String) -> some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 4) {
+                ForEach(Array(word.enumerated()), id: \.offset) { index, char in
+                    if char.isLetter {
+                        let letterIndex = getLetterIndex(upTo: index, in: word)
+                        Button(action: {
+                            if !showResult || needsCorrection {
+                                if !showKeyboard {
+                                    focusedIndex = findFirstEmptyPosition(in: word)
+                                } else {
+                                    focusedIndex = letterIndex
                                 }
+                                showKeyboard = true
                             }
-                            .pickerStyle(MenuPickerStyle())
-                            .font(.caption)
+                        }) {
+                            Text(getCurrentInput(at: letterIndex))
+                                .font(.system(size: 28, weight: .bold, design: .monospaced))
+                                .foregroundColor(letterIndex == focusedIndex ? .blue : .primary)
+                                .frame(width: 32, height: 40)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(Color(.systemGray6))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .stroke(letterIndex == focusedIndex ? Color.blue : Color.gray.opacity(0.3), lineWidth: 2)
+                                )
                         }
-                        .padding(.horizontal)
-                        
-                        // 日期筛选器
-                        HStack {
-                            Text("日期筛选:")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            
-                            Picker("日期筛选", selection: $vocabularyManager.dateFilterMode) {
-                                ForEach(DateFilterMode.allCases, id: \.self) { mode in
-                                    Text(mode.rawValue).tag(mode)
-                                }
-                            }
-                            .pickerStyle(MenuPickerStyle())
-                            .font(.caption)
-                            .onChange(of: vocabularyManager.dateFilterMode) { newMode in
-                                vocabularyManager.setDateFilterMode(newMode)
-                            }
-                            
-                            if vocabularyManager.dateFilterMode == .custom {
-                                DatePicker("", selection: $vocabularyManager.selectedDate, displayedComponents: .date)
-                                    .datePickerStyle(CompactDatePickerStyle())
-                                    .font(.caption)
-                                    .onChange(of: vocabularyManager.selectedDate) { newDate in
-                                        vocabularyManager.setCustomDate(newDate)
-                                    }
-                            }
-                        }
-                        .padding(.horizontal)
-                        
-                        // 进度指示器
-                        HStack {
-                            Text("\(currentVocabularyIndex + 1) / \(shuffledVocabularies.count)")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                            
-                            Spacer()
-                            
-                            Text("得分: \(score)")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.blue)
-                        }
-                        .padding(.horizontal)
+                        .disabled(showResult && !needsCorrection)
+                    } else if char == " " {
+                        Spacer()
+                            .frame(width: 16, height: 40)
+                    } else {
+                        Text(String(char))
+                            .font(.system(size: 28, weight: .bold, design: .monospaced))
+                            .foregroundColor(.secondary)
+                            .frame(width: 32, height: 40)
                     }
-                    
-                    // 类型标签
-                    Text(vocabulary.type.rawValue)
-                        .font(.caption)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            
+            if showKeyboard, let index = focusedIndex {
+                KeyboardInputView(
+                    onInput: { char in
+                        handleInput(char, at: index)
+                    },
+                    onDelete: {
+                        handleDelete(at: index)
+                    },
+                    onDone: {
+                        showKeyboard = false
+                        focusedIndex = nil
+                        checkAnswer()
+                    }
+                )
+            }
+        }
+    }
+    
+    private func getLetterIndex(upTo position: Int, in word: String) -> Int {
+        var count = 0
+        for (index, char) in word.enumerated() {
+            if index >= position { break }
+            if char.isLetter {
+                count += 1
+            }
+        }
+        return count
+    }
+    
+    private func handleInput(_ char: String, at index: Int) {
+        guard char.count == 1 else { return }
+        
+        // 确保数组足够大
+        while userInputs.count <= index {
+            userInputs.append("")
+        }
+        
+        userInputs[index] = char.lowercased()
+        
+        // 自动移动到下一个空白字母位置
+        if let vocabulary = currentVocabulary {
+            let letterCount = vocabulary.english.filter { $0.isLetter }.count
+            for i in (index + 1)..<letterCount {
+                if i >= userInputs.count || userInputs[i].isEmpty {
+                    focusedIndex = i
+                    return
+                }
+            }
+        }
+        
+        // 如果没有下一个位置，取消焦点
+        focusedIndex = nil
+    }
+    
+    private func handleDelete(at index: Int) {
+        // Ensure array is large enough
+        while userInputs.count <= index {
+            userInputs.append("")
+        }
+        
+        // Clear current position
+        userInputs[index] = ""
+        
+        // If current position is now empty and we're not at the beginning,
+        // move to previous position and clear it
+        if userInputs[index].isEmpty && index > 0 {
+            focusedIndex = index - 1
+            if index - 1 < userInputs.count {
+                userInputs[index - 1] = ""
+            }
+        }
+    }
+    
+    private var buttonArea: some View {
+        VStack(spacing: 15) {
+            if needsCorrection {
+                Button(action: {
+                    showResult = false
+                    needsCorrection = false
+                    // 清空所有输入
+                    userInputs = []
+                }) {
+                    Text("订正")
+                        .font(.title3)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(typeColor)
-                        .cornerRadius(12)
-                    
-                    // 中文提示
-                    Text(vocabulary.chinese)
-                        .font(.title2)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.orange)
+                        .cornerRadius(25)
+                }
+            } else if showResult && isCorrect {
+                Button(action: nextQuestion) {
+                    Text(currentVocabularyIndex < shuffledVocabularies.count - 1 ? "下一题" : "查看成绩")
+                        .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundColor(.blue)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                    
-                    // 被遮挡的英文词汇
-                    Text(maskedVocabulary)
-                        .font(.system(size: vocabulary.type == .phrase ? 28 : 36, weight: .bold, design: .monospaced))
-                        .foregroundColor(.primary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                        .padding(.vertical, 20)
-                        .background(
-                            RoundedRectangle(cornerRadius: 15)
-                                .fill(Color(.systemGray6))
-                        )
-                    
-                    // 用户输入
-                    VStack(spacing: 15) {
-                        TextField("请输入完整词汇", text: $userAnswer)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .font(.title3)
-                            .multilineTextAlignment(.center)
-                            .autocapitalization(.none)
-                            .disableAutocorrection(true)
-                            .textContentType(.none)
-                            .keyboardType(.asciiCapable)
-                        
-                        if showResult {
-                            HStack {
-                                Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                    .foregroundColor(isCorrect ? .green : .red)
-                                    .font(.title2)
-                                
-                                Text(isCorrect ? "正确！" : "错误")
-                                    .font(.title3)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(isCorrect ? .green : .red)
-                                
-                                if !isCorrect {
-                                    Text("正确答案: \(vocabulary.english)")
-                                        .font(.body)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(isCorrect ? Color.green.opacity(0.1) : Color.red.opacity(0.1))
-                            )
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    Spacer()
-                    
-                    // 按钮组
-                    VStack(spacing: 15) {
-                        if !showResult {
-                            Button(action: checkAnswer) {
-                                Text("检查答案")
-                                    .font(.title3)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 50)
-                                    .background(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [.blue, .purple]),
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .cornerRadius(25)
-                                    .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
-                            }
-                            .disabled(userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        } else {
-                            Button(action: nextQuestion) {
-                                Text(currentVocabularyIndex < shuffledVocabularies.count - 1 ? "下一题" : "查看成绩")
-                                    .font(.title3)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 50)
-                                    .background(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [.green, .blue]),
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .cornerRadius(25)
-                                    .shadow(color: .green.opacity(0.3), radius: 5, x: 0, y: 3)
-                            }
-                        }
-                        
-                        Button(action: resetGame) {
-                            Text("重新开始")
-                                .font(.body)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, 30)
-                }
-            } else {
-                // 空状态
-                VStack(spacing: 20) {
-                    Image(systemName: "questionmark.circle")
-                        .font(.system(size: 60))
-                        .foregroundColor(.gray)
-                    
-                    Text("当前组为空")
-                        .font(.title2)
-                        .foregroundColor(.gray)
-                    
-                    Text("请选择其他组或添加词汇")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-        .navigationTitle("词汇补全")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("返回") {
-                    presentationMode.wrappedValue.dismiss()
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.blue)
+                        .cornerRadius(25)
                 }
             }
-        }
-        .onAppear {
-            shuffleVocabularies()
-        }
-        .onChange(of: vocabularyManager.selectedGroup) { _ in
-            shuffleVocabularies()
-            currentVocabularyIndex = 0
-            resetCurrentQuestion()
-        }
-        .onChange(of: vocabularyManager.dateFilterMode) { _ in
-            shuffleVocabularies()
-            currentVocabularyIndex = 0
-            resetCurrentQuestion()
         }
     }
     
     private func checkAnswer() {
         guard let vocabulary = currentVocabulary else { return }
         
-        let trimmedAnswer = userAnswer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let correctAnswer = vocabulary.english.lowercased()
+        let correctAnswer = vocabulary.english.lowercased().filter { $0.isLetter }
+        let userAnswer = userInputs.joined().lowercased()
         
-        isCorrect = trimmedAnswer == correctAnswer
+        isCorrect = userAnswer == correctAnswer
         showResult = true
         
         if isCorrect {
-            score += 1
+            if isFirstAttempt {
+                score += 1
+            }
+            completedCount += 1
+            needsCorrection = false
+        } else {
+            needsCorrection = true
         }
         
-        completedCount += 1
+        if isFirstAttempt && !isCorrect {
+            isFirstAttempt = false
+        }
     }
     
     private func nextQuestion() {
@@ -334,93 +352,71 @@ struct WordCompletionView: View {
     }
     
     private func resetCurrentQuestion() {
-        userAnswer = ""
+        userInputs = []
         showResult = false
         isCorrect = false
-    }
-    
-    private func resetGame() {
-        shuffleVocabularies()
-        currentVocabularyIndex = 0
-        score = 0
-        completedCount = 0
-        showScore = false
-        resetCurrentQuestion()
+        focusedIndex = nil
+        showKeyboard = false
+        isFirstAttempt = true
+        needsCorrection = false
     }
     
     private func shuffleVocabularies() {
         let allVocabularies = vocabularyManager.currentGroupVocabularies.shuffled()
         shuffledVocabularies = Array(allVocabularies.prefix(maxQuestions))
+        resetCurrentQuestion()
     }
     
-    private var typeColor: Color {
-        guard let vocabulary = currentVocabulary else { return .gray }
-        switch vocabulary.type {
-        case .word:
-            return .blue
-        case .phrase:
-            return .green
+    private func findFirstEmptyPosition(in word: String) -> Int {
+        let letterCount = word.filter { $0.isLetter }.count
+        
+        for i in 0..<letterCount {
+            if i >= userInputs.count || userInputs[i].isEmpty {
+                return i
+            }
         }
-    }
-}
-
-struct ScoreView: View {
-    let score: Int
-    let total: Int
-    @ObservedObject var vocabularyManager: VocabularyManager
-    @Environment(\.presentationMode) var presentationMode
-    
-    private var percentage: Double {
-        guard total > 0 else { return 0 }
-        return Double(score) / Double(total) * 100
+        
+        return 0
     }
     
-    private var performance: String {
-        switch percentage {
-        case 90...100:
-            return "优秀！"
-        case 80..<90:
-            return "良好！"
-        case 70..<80:
-            return "及格"
-        default:
-            return "需要努力"
+    private func getCurrentInput(at index: Int) -> String {
+        if index < userInputs.count && !userInputs[index].isEmpty {
+            return userInputs[index]
+        }
+        return "_"
+    }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "questionmark.circle")
+                .font(.system(size: 60))
+                .foregroundColor(.gray)
+            
+            Text("当前组为空")
+                .font(.title2)
+                .foregroundColor(.gray)
         }
     }
     
-    private var performanceColor: Color {
-        switch percentage {
-        case 90...100:
-            return .green
-        case 80..<90:
-            return .blue
-        case 70..<80:
-            return .orange
-        default:
-            return .red
-        }
-    }
-    
-    var body: some View {
+    private var scoreView: some View {
         VStack(spacing: 30) {
             Spacer()
             
-            // 成绩图标
             Image(systemName: "trophy.fill")
                 .font(.system(size: 80))
-                .foregroundColor(performanceColor)
+                .foregroundColor(.green)
             
-            // 成绩文字
             VStack(spacing: 10) {
-                Text(performance)
+                Text("练习完成！")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                    .foregroundColor(performanceColor)
+                    .foregroundColor(.green)
                 
-                Text("\(score) / \(total)")
+                Text("\(score) / \(completedCount)")
                     .font(.title2)
                     .foregroundColor(.primary)
                 
+                let percentage = completedCount > 0 ? Double(score) / Double(completedCount) * 100 : 0
                 Text("正确率: \(Int(percentage))%")
                     .font(.title3)
                     .foregroundColor(.secondary)
@@ -428,46 +424,88 @@ struct ScoreView: View {
             
             Spacer()
             
-            // 按钮组
-            VStack(spacing: 15) {
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Text("返回主菜单")
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.blue, .purple]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(25)
-                        .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
-                }
-                
-                Button(action: {
-                    // 重新开始游戏
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Text("再玩一次")
-                        .font(.body)
-                        .foregroundColor(.blue)
-                }
+            Button(action: {
+                presentationMode.wrappedValue.dismiss()
+            }) {
+                Text("返回")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.blue)
+                    .cornerRadius(25)
             }
             .padding(.horizontal)
             .padding(.bottom, 50)
         }
-        .navigationBarHidden(true)
+    }
+}
+
+// 键盘输入视图
+struct KeyboardInputView: View {
+    let onInput: (String) -> Void
+    let onDelete: () -> Void
+    let onDone: () -> Void
+    
+    let letters = [
+        ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+        ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+        ["Z", "X", "C", "V", "B", "N", "M"]
+    ]
+    
+    var body: some View {
+        VStack(spacing: 14) {
+            ForEach(letters, id: \.self) { row in
+                HStack(spacing: 12) {
+                    ForEach(row, id: \.self) { letter in
+                        Button(action: {
+                            onInput(letter)
+                        }) {
+                            Text(letter)
+                                .font(.system(size: 26, weight: .semibold))
+                                .foregroundColor(.primary)
+                                .frame(width: 44, height: 56)
+                                .background(Color(.systemGray5))
+                                .cornerRadius(10)
+                        }
+                    }
+                }
+            }
+            
+            HStack(spacing: 12) {
+                Spacer()
+                
+                Button(action: onDelete) {
+                    Image(systemName: "delete.left")
+                        .font(.system(size: 24))
+                        .foregroundColor(.primary)
+                        .frame(width: 100, height: 56)
+                        .background(Color(.systemGray5))
+                        .cornerRadius(10)
+                }
+                
+                Button(action: onDone) {
+                    Text("完成")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 120, height: 56)
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(radius: 10)
+        )
     }
 }
 
 #Preview {
     NavigationView {
-        WordCompletionView(vocabularyManager: VocabularyManager(), maxQuestions: 10)
+        WordCompletionView(vocabularyManager: VocabularyManager(), maxQuestions: 5)
     }
 }
