@@ -342,18 +342,9 @@ struct FullScreenDailyPracticeView: View {
                             .fontWeight(.semibold)
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
                         
-                        if let englishFillBlankRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语填空") {
-                            // 统一显示10题，即使旧记录是5题
-                            let expectedTotal = 10
-                            let actualScore = englishFillBlankRecord.score
-                            Text("\(actualScore)/\(expectedTotal)")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("未完成 (0/10)")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
+                        Text(clockInManager.hasCheckedInToday(subject: "英语填空") ? "已完成" : "未完成")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
                     }
                     
                     Spacer()
@@ -366,13 +357,39 @@ struct FullScreenDailyPracticeView: View {
                         .font(.caption)
                     
                     VStack(alignment: .leading) {
-                        Text("加减法")
+                        Text("加减法练习")
                             .font(.caption)
                             .fontWeight(.semibold)
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
                         
                         if let mathRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "加减法") {
                             Text("\(mathRecord.score)/\(mathRecord.totalQuestions)")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("未完成")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                
+                // 乘法打卡状态
+                HStack {
+                    Image(systemName: clockInManager.hasCheckedInToday(subject: "乘法") ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
+                        .font(.caption)
+                    
+                    VStack(alignment: .leading) {
+                        Text("乘法练习")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
+                        
+                        if let multiplicationRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "乘法") {
+                            Text("\(multiplicationRecord.score)/\(multiplicationRecord.totalQuestions)")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         } else {

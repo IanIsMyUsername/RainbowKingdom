@@ -212,19 +212,9 @@ struct DailyPracticeView: View {
                             .font(.headline)
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
                         
-                        if let englishFillBlankRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语填空") {
-                            // 统一显示10题，即使旧记录是5题
-                            let expectedTotal = 10
-                            let actualScore = englishFillBlankRecord.score
-                            let percentage = expectedTotal > 0 ? Double(actualScore) / Double(expectedTotal) * 100 : 0
-                            Text("得分: \(actualScore)/\(expectedTotal) (\(String(format: "%.1f", percentage))%)")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("未完成 (0/10)")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
+                        Text(clockInManager.hasCheckedInToday(subject: "英语填空") ? "已完成" : "未完成")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
                     
                     Spacer()
