@@ -371,14 +371,18 @@ class ClockInManager: ObservableObject {
     private func loadClockInRecords() {
         if let data = userDefaults.data(forKey: clockInRecordsKey),
            let decoded = try? JSONDecoder().decode([ClockInRecord].self, from: data) {
-            // 迁移旧的"英语"记录为"英语翻译"
+            // 迁移旧的记录
             var migratedRecords = decoded
-            var migratedCount = 0
+            var englishMigratedCount = 0
+            var mathMigratedCount = 0
+            
             for i in 0..<migratedRecords.count {
-                if migratedRecords[i].subject == "英语" {
-                    // 由于ClockInRecord是struct，需要重新创建
-                    let oldRecord = migratedRecords[i]
-                    let newRecord = ClockInRecord(
+                let oldRecord = migratedRecords[i]
+                var newRecord: ClockInRecord? = nil
+                
+                // 迁移"英语"记录为"英语翻译"
+                if oldRecord.subject == "英语" {
+                    newRecord = ClockInRecord(
                         date: oldRecord.date,
                         subject: "英语翻译",
                         score: oldRecord.score,
@@ -388,17 +392,39 @@ class ClockInManager: ObservableObject {
                         questions: oldRecord.questions,
                         userAnswers: oldRecord.userAnswers
                     )
+                    englishMigratedCount += 1
+                }
+                // 迁移"数学"记录为"加减法"
+                else if oldRecord.subject == "数学" {
+                    newRecord = ClockInRecord(
+                        date: oldRecord.date,
+                        subject: "加减法",
+                        score: oldRecord.score,
+                        totalQuestions: oldRecord.totalQuestions,
+                        timeSpent: oldRecord.timeSpent,
+                        completedDate: oldRecord.completedDate,
+                        questions: oldRecord.questions,
+                        userAnswers: oldRecord.userAnswers
+                    )
+                    mathMigratedCount += 1
+                }
+                
+                if let newRecord = newRecord {
                     migratedRecords[i] = newRecord
-                    migratedCount += 1
                 }
             }
             
             clockInRecords = migratedRecords
             
             // 如果有迁移，保存更新后的记录
-            if migratedCount > 0 {
+            if englishMigratedCount > 0 || mathMigratedCount > 0 {
                 saveClockInRecords()
-                print("已迁移 \(migratedCount) 条'英语'记录为'英语翻译'")
+                if englishMigratedCount > 0 {
+                    print("已迁移 \(englishMigratedCount) 条'英语'记录为'英语翻译'")
+                }
+                if mathMigratedCount > 0 {
+                    print("已迁移 \(mathMigratedCount) 条'数学'记录为'加减法'")
+                }
             }
         }
     }
@@ -456,17 +482,59 @@ class ClockInManager: ObservableObject {
         }
     }
     
-    // 获取日历日期（使用持久化的日期范围）
+    // 获取日历日期（显示完整的一个月）
     func getCalendarDates() -> [Date] {
         let calendar = Calendar.current
+        let today = Date()
+        let currentMonth = calendar.component(.month, from: today)
+        let currentYear = calendar.component(.year, from: today)
+        
+        // 获取当前月份的第一天
+        guard let firstDayOfMonth = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 1)) else {
+            return []
+        }
+        
+        // 获取第一天是星期几（0=周日, 1=周一, ..., 6=周六）
+        let weekday = calendar.component(.weekday, from: firstDayOfMonth) - 1 // 转换为0-6
+        
+        // 获取当前月份的天数
+        guard let range = calendar.range(of: .day, in: .month, for: firstDayOfMonth) else {
+            return []
+        }
+        let daysInMonth = range.count
+        
+        // 获取上个月的最后几天（如果第一天不是周日）
         var dates: [Date] = []
         
-        // 使用保存的日期范围
-        var currentDate = calendarState.startDate
+        // 添加上个月的最后几天
+        if weekday > 0 {
+            let daysToAdd = weekday
+            for i in (1...daysToAdd).reversed() {
+                if let date = calendar.date(byAdding: .day, value: -i, to: firstDayOfMonth) {
+                    dates.append(date)
+                }
+            }
+        }
         
-        while currentDate <= calendarState.endDate {
-            dates.append(currentDate)
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+        // 添加当前月份的所有日期
+        for day in 1...daysInMonth {
+            if let date = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: day)) {
+                dates.append(date)
+            }
+        }
+        
+        // 计算需要添加的下个月日期，使日历完整（6行，42个日期）
+        let totalDays = dates.count
+        let daysToAdd = 42 - totalDays // 6行 x 7列 = 42个日期
+        
+        if daysToAdd > 0 {
+            if let lastDayOfMonth = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: daysInMonth)) {
+                for i in 1...daysToAdd {
+                    if let date = calendar.date(byAdding: .day, value: i, to: lastDayOfMonth) {
+                        dates.append(date)
+                    }
+                }
+            }
         }
         
         return dates

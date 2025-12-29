@@ -27,14 +27,11 @@ struct FullScreenDailyPracticeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // 日历、统计和今日状态（一行显示）
-                HStack(alignment: .center, spacing: 15) {
+                // 日历和今日状态（一行显示）
+                HStack(alignment: .top, spacing: 15) {
                     calendarView
-                    VStack(spacing: 15) {
-                        statsCard
-                        todayStatusCard
-                    }
-                    .frame(width: 200)
+                    todayStatusCard
+                        .frame(width: 280)
                 }
                 
                 // 练习选项
@@ -76,14 +73,64 @@ struct FullScreenDailyPracticeView: View {
     
     // 打卡日历视图
     private var calendarView: some View {
-        VStack(alignment: .leading, spacing: 15) {
+        VStack(alignment: .leading, spacing: 12) {
+            // 标题和统计信息行
             HStack {
                 Text("打卡日历")
-                    .font(.title2)
+                    .font(.title3)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
                 
                 Spacer()
+                
+                // 统计信息
+                let overallStats = clockInManager.getOverallStats()
+                HStack(spacing: 12) {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "flame.fill")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                            Text("\(clockInManager.stats.currentStreak)")
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.orange)
+                        }
+                        Text("连续打卡")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack(alignment: .trailing, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "trophy.fill")
+                                .font(.caption)
+                                .foregroundColor(.yellow)
+                            Text("\(clockInManager.stats.longestStreak)")
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.yellow)
+                        }
+                        Text("最长连续")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack(alignment: .trailing, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                            Text("\(overallStats.completedDays)")
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.green)
+                        }
+                        Text("完成总天数")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
                 
                 Button(action: {
                     showingHistory = true
@@ -109,14 +156,14 @@ struct FullScreenDailyPracticeView: View {
                 }
             }
             
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 3), count: 7), spacing: 4) {
                 // 星期标题
                 ForEach(["日", "一", "二", "三", "四", "五", "六"], id: \.self) { day in
                     Text(day)
-                        .font(.caption)
+                        .font(.system(size: 11))
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
-                        .frame(height: 30)
+                        .frame(height: 20)
                 }
                 
                 // 日历日期
@@ -135,194 +182,129 @@ struct FullScreenDailyPracticeView: View {
     
     // 单个日历日期视图
     private func calendarDayView(date: Date) -> some View {
-        let day = Calendar.current.component(.day, from: date)
-        let isToday = Calendar.current.isDateInToday(date)
-        let isPast = date < Calendar.current.startOfDay(for: Date())
-        let isFuture = date > Calendar.current.startOfDay(for: Date())
+        let calendar = Calendar.current
+        let today = Date()
+        let currentMonth = calendar.component(.month, from: today)
+        let dateMonth = calendar.component(.month, from: date)
+        let day = calendar.component(.day, from: date)
+        let isToday = calendar.isDateInToday(date)
+        let isPast = date < calendar.startOfDay(for: Date())
+        let isFuture = date > calendar.startOfDay(for: Date())
+        let isCurrentMonth = dateMonth == currentMonth
         
         // 只有过去的日期才检查打卡情况
         let hasEnglishCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "英语翻译") : false
         let hasEnglishFillBlankCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "英语填空") : false
-        let hasMathCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "加减法") : false
-        let hasAnyCheckIn = hasEnglishCheckIn || hasEnglishFillBlankCheckIn || hasMathCheckIn
+        // 同时检查"加减法"和"数学"（兼容旧记录）
+        let hasMathCheckIn = isPast ? (clockInManager.hasCheckedInOnDate(date, subject: "加减法") || clockInManager.hasCheckedInOnDate(date, subject: "数学")) : false
+        let hasMultiplicationCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "乘法") : false
+        let hasAnyCheckIn = hasEnglishCheckIn || hasEnglishFillBlankCheckIn || hasMathCheckIn || hasMultiplicationCheckIn
         
         return Button(action: {
             selectedDate = date
         }) {
             VStack(spacing: 2) {
                 Text("\(day)")
-                    .font(.caption)
-                    .fontWeight(isToday ? .bold : .regular)
-                    .foregroundColor(isToday ? .white : (isFuture ? .secondary : .primary))
+                    .font(.system(size: 11, weight: isToday ? .bold : .regular))
+                    .foregroundColor(
+                        isToday ? .white : 
+                        (isCurrentMonth ? (isFuture ? .secondary : .primary) : .secondary.opacity(0.5))
+                    )
                 
-                // 打卡状态指示器（只对过去的日期显示）
+                // 打卡状态指示器 - 显示4个点（2x2布局）
                 if isPast {
-                    HStack(spacing: 2) {
-                        if hasEnglishCheckIn {
+                    VStack(spacing: 1.5) {
+                        HStack(spacing: 1.5) {
                             Circle()
-                                .fill(.blue)
+                                .fill(hasEnglishCheckIn ? .blue : .gray.opacity(0.2))
+                                .frame(width: 4, height: 4)
+                            Circle()
+                                .fill(hasEnglishFillBlankCheckIn ? .purple : .gray.opacity(0.2))
                                 .frame(width: 4, height: 4)
                         }
-                        if hasEnglishFillBlankCheckIn {
+                        HStack(spacing: 1.5) {
                             Circle()
-                                .fill(.purple)
+                                .fill(hasMathCheckIn ? .green : .gray.opacity(0.2))
                                 .frame(width: 4, height: 4)
-                        }
-                        if hasMathCheckIn {
                             Circle()
-                                .fill(.green)
+                                .fill(hasMultiplicationCheckIn ? .orange : .gray.opacity(0.2))
                                 .frame(width: 4, height: 4)
                         }
                     }
                 } else if isFuture {
                     // 未来日期显示灰色圆点
-                    Circle()
-                        .fill(.gray.opacity(0.3))
-                        .frame(width: 4, height: 4)
+                    VStack(spacing: 1.5) {
+                        HStack(spacing: 1.5) {
+                            Circle()
+                                .fill(.gray.opacity(0.2))
+                                .frame(width: 4, height: 4)
+                            Circle()
+                                .fill(.gray.opacity(0.2))
+                                .frame(width: 4, height: 4)
+                        }
+                        HStack(spacing: 1.5) {
+                            Circle()
+                                .fill(.gray.opacity(0.2))
+                                .frame(width: 4, height: 4)
+                            Circle()
+                                .fill(.gray.opacity(0.2))
+                                .frame(width: 4, height: 4)
+                        }
+                    }
                 }
             }
-            .frame(width: 40, height: 40)
+            .frame(width: 36, height: 40)
             .background(
-                Circle()
+                RoundedRectangle(cornerRadius: 8)
                     .fill(
                         isToday ? .purple : 
-                        (isPast && hasAnyCheckIn ? .green.opacity(0.2) : 
-                         isFuture ? .gray.opacity(0.1) : .clear)
+                        (isPast && hasAnyCheckIn ? .green.opacity(0.15) : 
+                         isFuture ? .gray.opacity(0.05) : .clear)
                     )
             )
             .overlay(
-                Circle()
+                RoundedRectangle(cornerRadius: 8)
                     .stroke(
                         isToday ? .purple : 
-                        (isPast && hasAnyCheckIn ? .green : .clear), 
-                        lineWidth: 2
+                        (isPast && hasAnyCheckIn ? .green.opacity(0.3) : .clear), 
+                        lineWidth: isToday ? 2 : 1
                     )
             )
         }
         .buttonStyle(PlainButtonStyle())
     }
     
-    
-    // 统计卡片
-    private var statsCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // 标题行
-            Text("学习统计")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundColor(.primary)
-            
-            let overallStats = clockInManager.getOverallStats()
-            let englishStats = clockInManager.getSubjectStats(for: "英语翻译")
-            let englishFillBlankStats = clockInManager.getSubjectStats(for: "英语填空")
-            let mathStats = clockInManager.getSubjectStats(for: "数学")
-            
-            // 内容区域 - 两行
-            VStack(spacing: 8) {
-                // 第一行：总体统计
-                HStack(spacing: 12) {
-                    VStack {
-                        Text("\(overallStats.completedDays)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.green)
-                        Text("完成天数")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    VStack {
-                        Text("\(clockInManager.stats.currentStreak)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.orange)
-                        Text("连续打卡")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                
-                // 第二行：科目统计（三列）
-                HStack(spacing: 8) {
-                    VStack {
-                        Text("\(englishStats.completedDays)")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                        Text("英语翻译")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    VStack {
-                        Text("\(englishFillBlankStats.completedDays)")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.purple)
-                        Text("英语填空")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    VStack {
-                        Text("\(mathStats.completedDays)")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.green)
-                        Text("数学")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-            }
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 15)
-                .fill(Color(.systemBackground))
-                .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
-        )
-    }
-    
     // 今日打卡状态卡片
     private var todayStatusCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("今日状态")
-                .font(.subheadline)
+                .font(.headline)
                 .fontWeight(.semibold)
                 .foregroundColor(.primary)
             
-            VStack(spacing: 6) {
+            VStack(spacing: 10) {
                 // 英语翻译打卡状态
                 HStack {
                     Image(systemName: clockInManager.hasCheckedInToday(subject: "英语翻译") ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
-                        .font(.caption)
+                        .font(.body)
                     
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("英语翻译")
-                            .font(.caption)
+                            .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
                         
                         if let englishRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语翻译") {
-                            Text("\(englishRecord.score)/\(englishRecord.totalQuestions)")
-                                .font(.caption2)
+                            Text("\(englishRecord.score)/\(englishRecord.totalQuestions) · 已完成")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("用时: \(formatDuration(englishRecord.timeSpent))")
+                                .font(.caption)
                                 .foregroundColor(.secondary)
                         } else {
                             Text("未完成")
-                                .font(.caption2)
+                                .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -334,17 +316,26 @@ struct FullScreenDailyPracticeView: View {
                 HStack {
                     Image(systemName: clockInManager.hasCheckedInToday(subject: "英语填空") ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
-                        .font(.caption)
+                        .font(.body)
                     
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("英语填空")
-                            .font(.caption)
+                            .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
                         
-                        Text(clockInManager.hasCheckedInToday(subject: "英语填空") ? "已完成" : "未完成")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                        if let fillBlankRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语填空") {
+                            Text("\(fillBlankRecord.score)/\(fillBlankRecord.totalQuestions) · 已完成")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("用时: \(formatDuration(fillBlankRecord.timeSpent))")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("未完成")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
                     Spacer()
@@ -354,21 +345,24 @@ struct FullScreenDailyPracticeView: View {
                 HStack {
                     Image(systemName: clockInManager.hasCheckedInToday(subject: "加减法") ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
-                        .font(.caption)
+                        .font(.body)
                     
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("加减法练习")
-                            .font(.caption)
+                            .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
                         
                         if let mathRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "加减法") {
-                            Text("\(mathRecord.score)/\(mathRecord.totalQuestions)")
-                                .font(.caption2)
+                            Text("\(mathRecord.score)/\(mathRecord.totalQuestions) · 已完成")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("用时: \(formatDuration(mathRecord.timeSpent))")
+                                .font(.caption)
                                 .foregroundColor(.secondary)
                         } else {
                             Text("未完成")
-                                .font(.caption2)
+                                .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -380,21 +374,24 @@ struct FullScreenDailyPracticeView: View {
                 HStack {
                     Image(systemName: clockInManager.hasCheckedInToday(subject: "乘法") ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
-                        .font(.caption)
+                        .font(.body)
                     
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("乘法练习")
-                            .font(.caption)
+                            .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
                         
                         if let multiplicationRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "乘法") {
-                            Text("\(multiplicationRecord.score)/\(multiplicationRecord.totalQuestions)")
-                                .font(.caption2)
+                            Text("\(multiplicationRecord.score)/\(multiplicationRecord.totalQuestions) · 已完成")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("用时: \(formatDuration(multiplicationRecord.timeSpent))")
+                                .font(.caption)
                                 .foregroundColor(.secondary)
                         } else {
                             Text("未完成")
-                                .font(.caption2)
+                                .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -573,6 +570,11 @@ struct FullScreenDailyPracticeView: View {
         )
     }
     
+    private func formatDuration(_ timeInterval: TimeInterval) -> String {
+        let minutes = Int(timeInterval) / 60
+        let seconds = Int(timeInterval) % 60
+        return String(format: "%d分%d秒", minutes, seconds)
+    }
 }
 
 // 日期详情视图
