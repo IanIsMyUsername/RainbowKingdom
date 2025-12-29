@@ -60,11 +60,11 @@ struct MathView: View {
                 }
                 
                 // 今日打卡状态
-                if clockInManager.hasCheckedInToday(subject: "数学") {
+                if clockInManager.hasCheckedInToday(subject: "加减法") {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
-                        Text("今日已完成数学练习")
+                        Text("今日已完成加减法练习")
                             .font(.body)
                             .foregroundColor(.green)
                     }
@@ -75,7 +75,7 @@ struct MathView: View {
                     HStack {
                         Image(systemName: "clock")
                             .foregroundColor(.orange)
-                        Text("今日还未完成数学练习")
+                        Text("今日还未完成加减法练习")
                             .font(.body)
                             .foregroundColor(.orange)
                     }

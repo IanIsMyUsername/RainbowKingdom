@@ -20,6 +20,7 @@ struct FullScreenDailyPracticeView: View {
     @State private var showingEnglishPractice = false
     @State private var showingEnglishFillBlank = false
     @State private var showingMathPractice = false
+    @State private var showingMultiplicationPractice = false
     @State private var showingHistory = false
     @State private var selectedDate: Date? = nil
     
@@ -57,6 +58,10 @@ struct FullScreenDailyPracticeView: View {
         }
         .fullScreenCover(isPresented: $showingMathPractice) {
             MathDailyPracticeView()
+                .environmentObject(clockInManager)
+        }
+        .fullScreenCover(isPresented: $showingMultiplicationPractice) {
+            MultiplicationDailyPracticeView()
                 .environmentObject(clockInManager)
         }
         .sheet(isPresented: $showingHistory) {
@@ -138,7 +143,7 @@ struct FullScreenDailyPracticeView: View {
         // 只有过去的日期才检查打卡情况
         let hasEnglishCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "英语翻译") : false
         let hasEnglishFillBlankCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "英语填空") : false
-        let hasMathCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "数学") : false
+        let hasMathCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "加减法") : false
         let hasAnyCheckIn = hasEnglishCheckIn || hasEnglishFillBlankCheckIn || hasMathCheckIn
         
         return Button(action: {
@@ -354,19 +359,19 @@ struct FullScreenDailyPracticeView: View {
                     Spacer()
                 }
                 
-                // 数学打卡状态
+                // 加减法打卡状态
                 HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "数学") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "数学") ? .green : .gray)
+                    Image(systemName: clockInManager.hasCheckedInToday(subject: "加减法") ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
                         .font(.caption)
                     
                     VStack(alignment: .leading) {
-                        Text("数学")
+                        Text("加减法")
                             .font(.caption)
                             .fontWeight(.semibold)
-                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "数学") ? .green : .gray)
+                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
                         
-                        if let mathRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "数学") {
+                        if let mathRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "加减法") {
                             Text("\(mathRecord.score)/\(mathRecord.totalQuestions)")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
@@ -470,7 +475,7 @@ struct FullScreenDailyPracticeView: View {
                     .cornerRadius(12)
                 }
                 
-                // 数学练习按钮
+                // 加减法练习按钮
                 Button(action: {
                     showingMathPractice = true
                 }) {
@@ -480,7 +485,7 @@ struct FullScreenDailyPracticeView: View {
                             .foregroundColor(.white)
                         
                         VStack(alignment: .leading) {
-                            Text("数学打卡练习")
+                            Text("加减法练习")
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
@@ -499,6 +504,42 @@ struct FullScreenDailyPracticeView: View {
                     .background(
                         LinearGradient(
                             gradient: Gradient(colors: [.green, Color(red: 0.0, green: 0.8, blue: 0.6)]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(12)
+                }
+                
+                // 乘法练习按钮
+                Button(action: {
+                    showingMultiplicationPractice = true
+                }) {
+                    HStack {
+                        Image(systemName: "multiply.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                        
+                        VStack(alignment: .leading) {
+                            Text("乘法练习")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            
+                            Text("10道乘法题目，数字范围：1到2")
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.9))
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                    }
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.orange, .red]),
                             startPoint: .leading,
                             endPoint: .trailing
                         )

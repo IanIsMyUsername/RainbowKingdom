@@ -30,7 +30,7 @@ struct MathQuizView: View {
             }
         }
         .padding()
-        .navigationTitle("数学练习")
+        .navigationTitle("加减法练习")
         .navigationBarTitleDisplayMode(.inline)
         .alert(isPresented: $showingAlert) {
             Alert(title: Text("提示"), message: Text(alertMessage), dismissButton: .default(Text("确定")))
@@ -302,12 +302,12 @@ struct MathQuizView: View {
             
             // 添加到打卡记录
             if let lastResult = quizManager.quizResults.last {
-                // 将数学题目转换为QuizQuestion格式
+                // 将加减法题目转换为QuizQuestion格式
                 let quizQuestions = convertMathQuestionsToQuizQuestions(lastResult.questions)
                 
                 let clockInRecord = ClockInRecord(
                     date: Calendar.current.startOfDay(for: Date()),
-                    subject: "数学",
+                    subject: "加减法",
                     score: lastResult.correctAnswers,
                     totalQuestions: lastResult.totalQuestions,
                     timeSpent: lastResult.timeSpent,
@@ -360,14 +360,14 @@ struct MathQuizView: View {
         return String(format: "%02d:%02d", minutes, seconds)
     }
     
-    // 将数学题目转换为QuizQuestion格式
+    // 将加减法题目转换为QuizQuestion格式
     private func convertMathQuestionsToQuizQuestions(_ mathQuestions: [MathQuestion]) -> [QuizQuestion] {
         return mathQuestions.map { mathQuestion in
             // 创建一个虚拟的Vocabulary对象
             let vocabulary = Vocabulary(
                 english: "Math Question",
-                chinese: "数学题目",
-                group: "数学练习",
+                chinese: "加减法题目",
+                group: "加减法练习",
                 type: .word,
                 createdDate: Date()
             )

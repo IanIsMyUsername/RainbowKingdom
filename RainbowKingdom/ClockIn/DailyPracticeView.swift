@@ -14,6 +14,7 @@ struct DailyPracticeView: View {
     @State private var showingEnglishTranslation = false
     @State private var showingEnglishFillBlank = false
     @State private var showingMathPractice = false
+    @State private var showingMultiplicationPractice = false
     @State private var showingHistory = false
     
     var body: some View {
@@ -60,6 +61,10 @@ struct DailyPracticeView: View {
             MathDailyPracticeView()
                 .environmentObject(clockInManager)
         }
+        .fullScreenCover(isPresented: $showingMultiplicationPractice) {
+            MultiplicationDailyPracticeView()
+                .environmentObject(clockInManager)
+        }
         .sheet(isPresented: $showingHistory) {
             ClockInHistoryView()
                 .environmentObject(clockInManager)
@@ -77,7 +82,8 @@ struct DailyPracticeView: View {
             let overallStats = clockInManager.getOverallStats()
             let englishStats = clockInManager.getSubjectStats(for: "英语翻译")
             let englishFillBlankStats = clockInManager.getSubjectStats(for: "英语填空")
-            let mathStats = clockInManager.getSubjectStats(for: "数学")
+            let mathStats = clockInManager.getSubjectStats(for: "加减法")
+            let multiplicationStats = clockInManager.getSubjectStats(for: "乘法")
             
             VStack(spacing: 15) {
                 // 总体统计
@@ -104,35 +110,51 @@ struct DailyPracticeView: View {
                 }
                 
                 // 科目统计
-                HStack(spacing: 20) {
-                    VStack {
-                        Text("\(englishStats.completedDays)")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                        Text("英语翻译")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                VStack(spacing: 15) {
+                    HStack(spacing: 20) {
+                        VStack {
+                            Text("\(englishStats.completedDays)")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.blue)
+                            Text("英语翻译")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        VStack {
+                            Text("\(englishFillBlankStats.completedDays)")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.purple)
+                            Text("英语填空")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        VStack {
+                            Text("\(mathStats.completedDays)")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.green)
+                            Text("加减法")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
-                    VStack {
-                        Text("\(englishFillBlankStats.completedDays)")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.purple)
-                        Text("英语填空")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    VStack {
-                        Text("\(mathStats.completedDays)")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.green)
-                        Text("数学")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    HStack(spacing: 20) {
+                        VStack {
+                            Text("\(multiplicationStats.completedDays)")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.orange)
+                            Text("乘法")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
                     }
                 }
             }
@@ -208,19 +230,44 @@ struct DailyPracticeView: View {
                     Spacer()
                 }
                 
-                // 数学打卡状态
+                // 加减法打卡状态
                 HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "数学") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "数学") ? .green : .gray)
+                    Image(systemName: clockInManager.hasCheckedInToday(subject: "加减法") ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
                         .font(.title2)
                     
                     VStack(alignment: .leading) {
-                        Text("数学练习")
+                        Text("加减法练习")
                             .font(.headline)
-                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "数学") ? .green : .gray)
+                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
                         
-                        if let mathRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "数学") {
+                        if let mathRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "加减法") {
                             Text("得分: \(mathRecord.score)/\(mathRecord.totalQuestions) (\(String(format: "%.1f", mathRecord.percentage))%)")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("未完成")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                
+                // 乘法打卡状态
+                HStack {
+                    Image(systemName: clockInManager.hasCheckedInToday(subject: "乘法") ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
+                        .font(.title2)
+                    
+                    VStack(alignment: .leading) {
+                        Text("乘法练习")
+                            .font(.headline)
+                            .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
+                        
+                        if let multiplicationRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "乘法") {
+                            Text("得分: \(multiplicationRecord.score)/\(multiplicationRecord.totalQuestions) (\(String(format: "%.1f", multiplicationRecord.percentage))%)")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         } else {
@@ -323,7 +370,7 @@ struct DailyPracticeView: View {
                     .cornerRadius(12)
                 }
                 
-                // 数学练习按钮
+                // 加减法练习按钮
                 Button(action: {
                     showingMathPractice = true
                 }) {
@@ -333,7 +380,7 @@ struct DailyPracticeView: View {
                             .foregroundColor(.white)
                         
                         VStack(alignment: .leading) {
-                            Text("数学打卡练习")
+                            Text("加减法练习")
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
@@ -358,7 +405,43 @@ struct DailyPracticeView: View {
                     )
                     .cornerRadius(12)
                 }
-                .disabled(clockInManager.hasCheckedInToday(subject: "数学"))
+                .disabled(clockInManager.hasCheckedInToday(subject: "加减法"))
+                
+                // 乘法练习按钮
+                Button(action: {
+                    showingMultiplicationPractice = true
+                }) {
+                    HStack {
+                        Image(systemName: "multiply.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                        
+                        VStack(alignment: .leading) {
+                            Text("乘法练习")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            
+                            Text("10道乘法题目，数字范围：1到2")
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.9))
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                    }
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.orange, .red]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(12)
+                }
             }
         }
         .padding()

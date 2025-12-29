@@ -314,7 +314,7 @@ class ClockInManager: ObservableObject {
             
             let mathRecord20 = ClockInRecord(
                 date: date20,
-                subject: "数学",
+                subject: "加减法",
                 score: 10,
                 totalQuestions: 10,
                 timeSpent: 240, // 4分钟
@@ -343,7 +343,7 @@ class ClockInManager: ObservableObject {
             
             let mathRecord21 = ClockInRecord(
                 date: date21,
-                subject: "数学",
+                subject: "加减法",
                 score: 10,
                 totalQuestions: 10,
                 timeSpent: 320, // 5分20秒

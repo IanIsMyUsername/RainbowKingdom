@@ -1,5 +1,5 @@
 //
-//  MathDailyPracticeView.swift
+//  MultiplicationDailyPracticeView.swift
 //  RainbowKingdom
 //
 //  Created by Yizhou Chen on 2025/9/11.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct MathDailyPracticeView: View {
-    @StateObject private var quizManager = MathQuizManager()
+struct MultiplicationDailyPracticeView: View {
+    @StateObject private var quizManager = MultiplicationQuizManager()
     @EnvironmentObject var clockInManager: ClockInManager
     @Environment(\.presentationMode) var presentationMode
     
@@ -28,15 +28,12 @@ struct MathDailyPracticeView: View {
                 if showSummary {
                     // 总结界面
                     summaryView
-                } else if !quizManager.isQuizActive {
-                    // 练习开始界面
-                    startView
                 } else {
                     // 练习进行界面
                     quizView
                 }
             }
-            .navigationTitle("加减法练习")
+            .navigationTitle("乘法练习")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -56,68 +53,14 @@ struct MathDailyPracticeView: View {
         }
     }
     
-    // MARK: - 开始界面
-    private var startView: some View {
-        VStack(spacing: 30) {
-            Image(systemName: "plus.forwardslash.minus")
-                .font(.system(size: 80))
-                .foregroundColor(.blue)
-            
-            Text("加减法每日一练")
-                .font(.system(size: 34, weight: .bold))
-                .foregroundColor(.blue)
-            
-            Text("10道加减法题目，70以内连续加减2个数")
-                .font(.title2)
-                .foregroundColor(.gray)
-            
-            VStack(spacing: 15) {
-                Text("练习规则")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("• 共10道题目")
-                    Text("• 数字范围：70以内")
-                    Text("• 包含加法和减法")
-                    Text("• 完成后自动打卡")
-                }
-                .font(.body)
-                .foregroundColor(.secondary)
-            }
-            .padding()
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(10)
-            
-            Button(action: startQuiz) {
-                HStack {
-                    Image(systemName: "play.fill")
-                    Text("开始练习")
-                }
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 200, height: 50)
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [.blue, .purple]),
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .cornerRadius(25)
-                .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
-            }
-            
-            Spacer()
-        }
-        .padding()
-    }
-    
     // MARK: - 练习界面
     private var quizView: some View {
         VStack(spacing: 20) {
             // 进度条
-            ProgressView(value: Double(quizManager.currentQuestionIndex + 1), total: Double(quizManager.currentQuiz.count))
+            ProgressView(
+                value: Double(min(quizManager.currentQuestionIndex + 1, quizManager.currentQuiz.count)),
+                total: Double(max(quizManager.currentQuiz.count, 1))
+            )
                 .progressViewStyle(LinearProgressViewStyle(tint: .blue))
                 .scaleEffect(x: 1, y: 2, anchor: .center)
             
@@ -207,93 +150,6 @@ struct MathDailyPracticeView: View {
         .padding()
     }
     
-    // MARK: - 结果界面
-    private var resultView: some View {
-        VStack(spacing: 30) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 80))
-                .foregroundColor(.green)
-            
-            Text("练习完成！")
-                .font(.system(size: 34, weight: .bold))
-                .foregroundColor(.green)
-            
-            if let lastResult = quizManager.quizResults.last {
-                VStack(spacing: 20) {
-                    // 成绩显示
-                    VStack(spacing: 10) {
-                        Text("正确率")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        
-                        Text("\(Int(lastResult.percentage))%")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
-                            .foregroundColor(.blue)
-                        
-                        Text(lastResult.performance)
-                            .font(.system(size: 22, weight: .semibold))
-                            .foregroundColor(performanceColor(lastResult.percentage))
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 15)
-                            .fill(Color.blue.opacity(0.1))
-                    )
-                    
-                    // 详细信息
-                    VStack(spacing: 15) {
-                        HStack {
-                            Text("答对题目：")
-                            Spacer()
-                            Text("\(lastResult.correctAnswers) / \(lastResult.totalQuestions)")
-                                .font(.system(size: 17, weight: .semibold))
-                        }
-                        
-                        HStack {
-                            Text("用时：")
-                            Spacer()
-                            Text(formatTime(lastResult.timeSpent))
-                                .font(.system(size: 17, weight: .semibold))
-                        }
-                        
-                        HStack {
-                            Text("练习类型：")
-                            Spacer()
-                            Text(lastResult.operationType.displayName)
-                                .font(.system(size: 17, weight: .semibold))
-                        }
-                    }
-                    .font(.body)
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(10)
-                }
-            }
-            
-            VStack(spacing: 15) {
-                Button("再来一次") {
-                    resetQuiz()
-                }
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 200, height: 50)
-                .background(Color.blue)
-                .cornerRadius(25)
-                
-                Button("返回首页") {
-                    presentationMode.wrappedValue.dismiss()
-                }
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.blue)
-                .frame(width: 200, height: 50)
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(25)
-            }
-            
-            Spacer()
-        }
-    }
-    
     // MARK: - 总结界面
     private var summaryView: some View {
         VStack(spacing: 0) {
@@ -347,11 +203,11 @@ struct MathDailyPracticeView: View {
                 ScrollView {
                     LazyVStack(spacing: 15) {
                         ForEach(Array(lastResult.questions.enumerated()), id: \.offset) { index, question in
-                            MathQuestionSummaryRow(
+                            MultiplicationQuestionSummaryRow(
                                 questionNumber: index + 1,
                                 question: question,
                                 userAnswer: index < lastResult.userAnswers.count ? lastResult.userAnswers[index] : "",
-                                isCorrect: isMathAnswerCorrect(for: index, result: lastResult)
+                                isCorrect: isMultiplicationAnswerCorrect(for: index, result: lastResult)
                             )
                         }
                     }
@@ -362,12 +218,14 @@ struct MathDailyPracticeView: View {
             
             // 底部操作按钮
             VStack(spacing: 15) {
-                Button("返回主界面") {
+                Button(action: {
                     presentationMode.wrappedValue.dismiss()
+                }) {
+                    Text("返回主界面")
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
                 }
-                .foregroundColor(.white)
-                .padding()
-                .frame(maxWidth: .infinity)
                 .background(
                     LinearGradient(
                         gradient: Gradient(colors: [.green, .blue]),
@@ -377,13 +235,16 @@ struct MathDailyPracticeView: View {
                 )
                 .cornerRadius(15)
                 .shadow(color: .green.opacity(0.3), radius: 5, x: 0, y: 3)
+                .contentShape(Rectangle())
                 
-                Button("重新开始") {
+                Button(action: {
                     resetQuiz()
+                }) {
+                    Text("重新开始")
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
                 }
-                .foregroundColor(.white)
-                .padding()
-                .frame(maxWidth: .infinity)
                 .background(
                     LinearGradient(
                         gradient: Gradient(colors: [.orange, .red]),
@@ -393,6 +254,7 @@ struct MathDailyPracticeView: View {
                 )
                 .cornerRadius(15)
                 .shadow(color: .orange.opacity(0.3), radius: 5, x: 0, y: 3)
+                .contentShape(Rectangle())
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 20)
@@ -401,21 +263,20 @@ struct MathDailyPracticeView: View {
     
     // MARK: - 辅助方法
     private func startQuiz() {
-        quizManager.startQuiz(operationType: .mixed, questionCount: 10)
+        // 使用默认配置：10道题目，数字范围1到2（maxNumber=3）
+        let config = MultiplicationQuizConfig(maxNumber: 3, questionCount: 10)
+        quizManager.startQuiz(config: config)
         selectedAnswer = ""
         showAnswerFeedback = false
         isAnswerCorrect = false
         correctAnswer = ""
         showSummary = false
         showingResult = false
+        submittedQuestions = []
     }
     
-    
-    
-    
-    
-    // 检查加减法答案是否正确
-    private func isMathAnswerCorrect(for index: Int, result: MathQuizResult) -> Bool {
+    // 检查乘法答案是否正确
+    private func isMultiplicationAnswerCorrect(for index: Int, result: MultiplicationQuizResult) -> Bool {
         guard index < result.questions.count && index < result.userAnswers.count else { return false }
         let question = result.questions[index]
         let userAnswer = result.userAnswers[index].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -443,7 +304,7 @@ struct MathDailyPracticeView: View {
     }
     
     // 选项视图
-    private func optionsView(question: MathQuestion, options: [Int]) -> some View {
+    private func optionsView(question: MultiplicationQuestion, options: [Int]) -> some View {
         VStack(spacing: 12) {
             ForEach(Array(options.enumerated()), id: \.offset) { index, option in
                 Button(action: {
@@ -597,12 +458,12 @@ struct MathDailyPracticeView: View {
         
         // 创建打卡记录
         if let result = quizManager.quizResults.last {
-            // 将加减法题目转换为QuizQuestion格式
-            let quizQuestions = convertMathQuestionsToQuizQuestions(result.questions)
+            // 将乘法题目转换为QuizQuestion格式
+            let quizQuestions = convertMultiplicationQuestionsToQuizQuestions(result.questions)
             
             let record = ClockInRecord(
                 date: result.completedDate,
-                subject: "加减法",
+                subject: "乘法",
                 score: result.score,
                 totalQuestions: result.totalQuestions,
                 timeSpent: result.timeSpent,
@@ -629,39 +490,37 @@ struct MathDailyPracticeView: View {
         quizManager.resetQuiz()
     }
     
-    // 将加减法题目转换为QuizQuestion格式
-    private func convertMathQuestionsToQuizQuestions(_ mathQuestions: [MathQuestion]) -> [QuizQuestion] {
-        return mathQuestions.map { mathQuestion in
+    // 将乘法题目转换为QuizQuestion格式
+    private func convertMultiplicationQuestionsToQuizQuestions(_ multiplicationQuestions: [MultiplicationQuestion]) -> [QuizQuestion] {
+        return multiplicationQuestions.map { multiplicationQuestion in
             // 创建一个虚拟的Vocabulary对象
             let vocabulary = Vocabulary(
-                english: "Math Question",
-                chinese: "加减法题目",
-                group: "加减法练习",
+                english: "Multiplication Question",
+                chinese: "乘法题目",
+                group: "乘法练习",
                 type: .word,
                 createdDate: Date()
             )
             
             // 生成选择题选项
-            let options = mathQuestion.options?.map { "\($0)" } ?? []
+            let options = multiplicationQuestion.options?.map { "\($0)" } ?? []
             
-            let op1Name = mathQuestion.operation.displayName
-            let op2Name = mathQuestion.operation2.displayName
             return QuizQuestion(
                 vocabulary: vocabulary,
                 questionType: .multipleChoice,
-                question: mathQuestion.question,
-                correctAnswer: "\(mathQuestion.correctAnswer)",
+                question: multiplicationQuestion.question,
+                correctAnswer: "\(multiplicationQuestion.correctAnswer)",
                 options: options,
-                hint: "类型：连续运算（\(op1Name) 和 \(op2Name)）"
+                hint: "类型：乘法（\(multiplicationQuestion.number1) × \(multiplicationQuestion.number2)）"
             )
         }
     }
 }
 
-// 加减法题目总结行组件
-struct MathQuestionSummaryRow: View {
+// 乘法题目总结行组件
+struct MultiplicationQuestionSummaryRow: View {
     let questionNumber: Int
-    let question: MathQuestion
+    let question: MultiplicationQuestion
     let userAnswer: String
     let isCorrect: Bool
     
@@ -768,6 +627,7 @@ struct MathQuestionSummaryRow: View {
 }
 
 #Preview {
-    MathDailyPracticeView()
+    MultiplicationDailyPracticeView()
         .environmentObject(ClockInManager())
 }
+
