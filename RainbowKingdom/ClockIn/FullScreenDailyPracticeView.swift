@@ -17,11 +17,13 @@ extension Date: Identifiable {
 struct FullScreenDailyPracticeView: View {
     @StateObject private var clockInManager = ClockInManager()
     @StateObject private var vocabularyManager = VocabularyManager()
+    @StateObject private var configManager = PracticeConfigManager()
     @State private var showingEnglishPractice = false
     @State private var showingEnglishFillBlank = false
     @State private var showingMathPractice = false
     @State private var showingMultiplicationPractice = false
     @State private var showingHistory = false
+    @State private var showingMultiplicationConfig = false
     @State private var selectedDate: Date? = nil
     
     var body: some View {
@@ -43,6 +45,23 @@ struct FullScreenDailyPracticeView: View {
         }
         .navigationTitle("每日一练")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    showingMultiplicationConfig = true
+                }) {
+                    Image(systemName: "gearshape.fill")
+                        .foregroundColor(.blue)
+                }
+            }
+        }
+        .sheet(isPresented: $showingMultiplicationConfig) {
+            MultiplicationConfigView()
+                .onDisappear {
+                    // 当配置页面关闭时，重新加载配置以更新显示
+                    configManager.loadConfig()
+                }
+        }
         .fullScreenCover(isPresented: $showingEnglishPractice) {
             EnglishClockInView()
                 .environmentObject(clockInManager)
@@ -431,7 +450,7 @@ struct FullScreenDailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("30个选择题，考察最近2周的单词和短语")
+                            Text("\(configManager.config.englishTranslation.questionCount)个选择题，考察最近\(configManager.config.englishTranslation.vocabularyWeeks)周的单词和短语")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
@@ -467,7 +486,7 @@ struct FullScreenDailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("10个填空题，根据中文和提示填写完整单词")
+                            Text("\(configManager.config.englishFillBlank.questionCount)个填空题，考察最近\(configManager.config.englishFillBlank.vocabularyWeeks)周的单词")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
@@ -503,7 +522,7 @@ struct FullScreenDailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("10道加减法题目，40以内连续加减2个数")
+                            Text("\(configManager.config.additionSubtraction.questionCount)道加减法题目，\(configManager.config.additionSubtraction.maxNumber)以内连续加减2个数")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
@@ -539,7 +558,7 @@ struct FullScreenDailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("10道乘法题目，数字范围：1到2")
+                            Text("\(configManager.config.multiplication.questionCount)道乘法题目，数字范围：1到\(configManager.config.multiplication.maxNumber - 1)")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }

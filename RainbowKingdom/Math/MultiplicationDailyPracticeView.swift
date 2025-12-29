@@ -263,9 +263,8 @@ struct MultiplicationDailyPracticeView: View {
     
     // MARK: - 辅助方法
     private func startQuiz() {
-        // 使用默认配置：10道题目，数字范围1到2（maxNumber=3）
-        let config = MultiplicationQuizConfig(maxNumber: 3, questionCount: 10)
-        quizManager.startQuiz(config: config)
+        // 使用保存的配置，如果没有则使用默认配置
+        quizManager.startQuiz()
         selectedAnswer = ""
         showAnswerFeedback = false
         isAnswerCorrect = false

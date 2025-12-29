@@ -279,7 +279,7 @@ class MultiplicationQuizManager: ObservableObject {
     }
     
     // 加载配置
-    private func loadConfig() {
+    func loadConfig() {
         if let data = userDefaults.data(forKey: multiplicationQuizConfigKey),
            let decoded = try? JSONDecoder().decode(MultiplicationQuizConfig.self, from: data) {
             config = decoded
