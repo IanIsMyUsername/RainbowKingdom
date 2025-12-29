@@ -72,7 +72,7 @@ struct MathQuizView: View {
                 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("• 共10道题目")
-                    Text("• 数字范围：40以内")
+                    Text("• 数字范围：70以内")
                     Text("• 包含加法和减法")
                     Text("• 完成后自动打卡")
                 }

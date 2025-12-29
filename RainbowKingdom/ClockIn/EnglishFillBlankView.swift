@@ -26,8 +26,9 @@ struct EnglishFillBlankView: View {
     @State private var showKeyboard = false
     @State private var needsCorrection = false
     @State private var answeredCorrectly: Set<Int> = [] // 首次答对的题目
+    @State private var initiallyWrong: Set<Int> = [] // 首次答错的题目
     
-    private let questionCount = 5
+    private let questionCount = 10
     
     var body: some View {
         NavigationView {
@@ -411,86 +412,188 @@ struct EnglishFillBlankView: View {
     }
     
     private var summaryView: some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 20) {
-                Text("练习总结")
-                    .font(.system(size: 34, weight: .bold))
-                    .foregroundColor(.primary)
+        ScrollView {
+            VStack(spacing: 0) {
+                VStack(spacing: 20) {
+                    Text("练习总结")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundColor(.primary)
+                    
+                    let score = answeredCorrectly.count
+                    let percentage = questions.count > 0 ? Double(score) / Double(questions.count) * 100 : 0
+                    
+                    VStack(spacing: 15) {
+                        Text("总成绩")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        
+                        Text("\(score) / \(questions.count)")
+                            .font(.system(size: 48, weight: .bold, design: .rounded))
+                            .foregroundColor(.blue)
+                        
+                        Text("\(String(format: "%.1f", percentage))%")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        
+                        Text(getPerformanceText(percentage: percentage))
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(getPerformanceColor(percentage: percentage))
+                    }
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .shadow(color: .blue.opacity(0.2), radius: 10, x: 0, y: 5)
+                    )
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
                 
-                let score = answeredCorrectly.count
-                let percentage = questions.count > 0 ? Double(score) / Double(questions.count) * 100 : 0
+                // 所有题目展示
+                VStack(spacing: 15) {
+                    Text("题目详情")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 20)
+                    
+                    ForEach(Array(questions.enumerated()), id: \.offset) { index, question in
+                        questionSummaryCard(
+                            question: question,
+                            index: index,
+                            userAnswer: getQuestionUserAnswer(index: index),
+                            isCorrect: answeredCorrectly.contains(index)
+                        )
+                    }
+                }
+                .padding(.bottom, 20)
                 
                 VStack(spacing: 15) {
-                    Text("总成绩")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundColor(.secondary)
-                    
-                    Text("\(score) / \(questions.count)")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
-                        .foregroundColor(.blue)
-                    
-                    Text("\(String(format: "%.1f", percentage))%")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundColor(.secondary)
-                    
-                    Text(getPerformanceText(percentage: percentage))
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(getPerformanceColor(percentage: percentage))
-                }
-                .padding(20)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                    Button("返回主界面") {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.green, .blue]),
+                            startPoint: .leading,
+                            endPoint: .trailing
                         )
-                        .shadow(color: .blue.opacity(0.2), radius: 10, x: 0, y: 5)
-                )
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
-            
-            Spacer()
-            
-            VStack(spacing: 15) {
-                Button("返回主界面") {
-                    presentationMode.wrappedValue.dismiss()
-                }
-                .foregroundColor(.white)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [.green, .blue]),
-                        startPoint: .leading,
-                        endPoint: .trailing
                     )
-                )
-                .cornerRadius(15)
-                .shadow(color: .green.opacity(0.3), radius: 5, x: 0, y: 3)
-                
-                Button("重新开始") {
-                    restartQuiz()
-                }
-                .foregroundColor(.white)
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [.orange, .red]),
-                        startPoint: .leading,
-                        endPoint: .trailing
+                    .cornerRadius(15)
+                    .shadow(color: .green.opacity(0.3), radius: 5, x: 0, y: 3)
+                    
+                    Button("重新开始") {
+                        restartQuiz()
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.orange, .red]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
                     )
-                )
-                .cornerRadius(15)
-                .shadow(color: .orange.opacity(0.3), radius: 5, x: 0, y: 3)
+                    .cornerRadius(15)
+                    .shadow(color: .orange.opacity(0.3), radius: 5, x: 0, y: 3)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 20)
         }
+    }
+    
+    private func questionSummaryCard(question: FillBlankQuestion, index: Int, userAnswer: String, isCorrect: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("题目 \(index + 1)")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                HStack(spacing: 6) {
+                    Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundColor(isCorrect ? .green : .red)
+                        .font(.title3)
+                    
+                    Text(isCorrect ? "正确" : "错误")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(isCorrect ? .green : .red)
+                }
+            }
+            
+            Divider()
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("中文翻译")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary)
+                
+                Text(question.chineseTranslation)
+                    .font(.system(size: 16))
+                    .foregroundColor(.primary)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("提示")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary)
+                
+                Text(question.partialWord)
+                    .font(.system(size: 16, design: .monospaced))
+                    .foregroundColor(.blue)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("你的答案")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary)
+                
+                Text(userAnswer.isEmpty ? "未作答" : userAnswer)
+                    .font(.system(size: 16, design: .monospaced))
+                    .foregroundColor(userAnswer.isEmpty ? .gray : .primary)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("正确答案")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary)
+                
+                Text(question.correctAnswer)
+                    .font(.system(size: 16, design: .monospaced))
+                    .foregroundColor(.green)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isCorrect ? Color.green.opacity(0.3) : Color.red.opacity(0.3), lineWidth: 2)
+        )
+        .padding(.horizontal, 20)
+    }
+    
+    private func getQuestionUserAnswer(index: Int) -> String {
+        if index < userInputs.count {
+            return userInputs[index].joined()
+        }
+        return ""
     }
     
     private func startQuiz() {
@@ -703,6 +806,7 @@ struct EnglishFillBlankView: View {
         showKeyboard = false
         needsCorrection = false
         answeredCorrectly = []
+        initiallyWrong = []
         quizStartTime = nil
         startQuiz()
     }
@@ -710,18 +814,25 @@ struct EnglishFillBlankView: View {
     private func submitAnswer() {
         guard let question = getCurrentQuestion() else { return }
         
+        let isFirstSubmission = !submittedQuestions.contains(currentQuestionIndex)
         submittedQuestions.insert(currentQuestionIndex)
         
         isAnswerCorrect = checkCurrentAnswer(question)
         showAnswerFeedback = true
         
         if isAnswerCorrect {
-            // 只有首次答对才记录
-            if !answeredCorrectly.contains(currentQuestionIndex) {
+            // 只有首次答对且之前没有答错过才记录
+            if isFirstSubmission && !initiallyWrong.contains(currentQuestionIndex) {
                 answeredCorrectly.insert(currentQuestionIndex)
             }
             needsCorrection = false
         } else {
+            // 如果首次提交就错了，标记为初始错误
+            if isFirstSubmission {
+                initiallyWrong.insert(currentQuestionIndex)
+                // 如果之前在answeredCorrectly中（不应该发生，但为了安全），移除它
+                answeredCorrectly.remove(currentQuestionIndex)
+            }
             needsCorrection = true
         }
     }

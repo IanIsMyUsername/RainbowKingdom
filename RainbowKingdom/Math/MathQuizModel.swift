@@ -89,22 +89,22 @@ struct MathQuestion: Identifiable, Codable {
             attempts += 1
         }
         
-        // 如果无法生成足够的唯一选项，添加一些默认值（确保在1-40范围内）
+        // 如果无法生成足够的唯一选项，添加一些默认值（确保在1-70范围内）
         while options.count < 4 {
-            let fallbackAnswer1 = min(40, max(1, correctAnswer + options.count))
-            let fallbackAnswer2 = min(40, max(1, correctAnswer - options.count))
+            let fallbackAnswer1 = min(70, max(1, correctAnswer + options.count))
+            let fallbackAnswer2 = min(70, max(1, correctAnswer - options.count))
             
-            if !options.contains(fallbackAnswer1) && fallbackAnswer1 >= 1 && fallbackAnswer1 <= 40 {
+            if !options.contains(fallbackAnswer1) && fallbackAnswer1 >= 1 && fallbackAnswer1 <= 70 {
                 options.append(fallbackAnswer1)
-            } else if !options.contains(fallbackAnswer2) && fallbackAnswer2 >= 1 && fallbackAnswer2 <= 40 {
+            } else if !options.contains(fallbackAnswer2) && fallbackAnswer2 >= 1 && fallbackAnswer2 <= 70 {
                 options.append(fallbackAnswer2)
             } else {
                 // 如果都重复，尝试其他值
-                let alternative = min(40, max(1, correctAnswer + options.count * 2))
+                let alternative = min(70, max(1, correctAnswer + options.count * 2))
                 if !options.contains(alternative) {
                     options.append(alternative)
                 } else {
-                    options.append(max(1, min(40, correctAnswer - options.count * 2)))
+                    options.append(max(1, min(70, correctAnswer - options.count * 2)))
                 }
             }
         }
@@ -117,11 +117,11 @@ struct MathQuestion: Identifiable, Codable {
         // 确保范围至少包含6个数字，以便生成足够的错误答案
         let rangeSize = 6
         let lowerBound = max(1, correctAnswer - rangeSize/2)
-        let upperBound = min(40, correctAnswer + rangeSize/2)
+        let upperBound = min(70, correctAnswer + rangeSize/2)
         
         // 如果范围太小，扩展范围
         let actualLowerBound = max(1, min(lowerBound, upperBound - rangeSize + 1))
-        let actualUpperBound = min(40, max(upperBound, actualLowerBound + rangeSize - 1))
+        let actualUpperBound = min(70, max(upperBound, actualLowerBound + rangeSize - 1))
         
         let range = actualLowerBound...actualUpperBound
         var wrongAnswer = Int.random(in: range)
@@ -282,8 +282,8 @@ class MathQuizManager: ObservableObject {
         let maxAttempts = 100 // 防止无限循环
         
         repeat {
-            // 随机生成第一个数字（范围1-40）
-            number1 = Int.random(in: 1...40)
+            // 随机生成第一个数字（范围1-70）
+            number1 = Int.random(in: 1...70)
             
             // 随机选择第一个运算符
             if operationType == .addition {
@@ -295,12 +295,12 @@ class MathQuizManager: ObservableObject {
                 operation1 = Bool.random() ? .addition : .subtraction
             }
             
-            // 根据第一个运算符生成第二个数字，确保中间结果在1-40之间
+            // 根据第一个运算符生成第二个数字，确保中间结果在1-70之间
             let intermediateResult: Int
             if operation1 == .addition {
-                // 加法：中间结果 = number1 + number2，需要 >= 1 且 <= 40
-                // number2 可以是 1 到 (40 - number1)
-                let maxNumber2 = 40 - number1
+                // 加法：中间结果 = number1 + number2，需要 >= 1 且 <= 70
+                // number2 可以是 1 到 (70 - number1)
+                let maxNumber2 = 70 - number1
                 guard maxNumber2 >= 1 else {
                     attempts += 1
                     continue
@@ -308,7 +308,7 @@ class MathQuizManager: ObservableObject {
                 number2 = Int.random(in: 1...maxNumber2)
                 intermediateResult = number1 + number2
             } else {
-                // 减法：中间结果 = number1 - number2，需要 >= 1 且 <= 40
+                // 减法：中间结果 = number1 - number2，需要 >= 1 且 <= 70
                 // 确保 number1 > number2，且中间结果 >= 1
                 guard number1 > 1 else {
                     attempts += 1
@@ -318,8 +318,8 @@ class MathQuizManager: ObservableObject {
                 intermediateResult = number1 - number2
             }
             
-            // 确保中间结果在1-40之间
-            guard intermediateResult >= 1 && intermediateResult <= 40 else {
+            // 确保中间结果在1-70之间
+            guard intermediateResult >= 1 && intermediateResult <= 70 else {
                 attempts += 1
                 continue
             }
@@ -334,12 +334,12 @@ class MathQuizManager: ObservableObject {
                 operation2 = Bool.random() ? .addition : .subtraction
             }
             
-            // 根据第二个运算符生成第三个数字，确保最终结果在1-40之间
+            // 根据第二个运算符生成第三个数字，确保最终结果在1-70之间
             let finalResult: Int
             if operation2 == .addition {
-                // 加法：最终结果 = intermediateResult + number3，需要 >= 1 且 <= 40
-                // number3 可以是 1 到 (40 - intermediateResult)
-                let maxNumber3 = 40 - intermediateResult
+                // 加法：最终结果 = intermediateResult + number3，需要 >= 1 且 <= 70
+                // number3 可以是 1 到 (70 - intermediateResult)
+                let maxNumber3 = 70 - intermediateResult
                 guard maxNumber3 >= 1 else {
                     attempts += 1
                     continue
@@ -347,7 +347,7 @@ class MathQuizManager: ObservableObject {
                 number3 = Int.random(in: 1...maxNumber3)
                 finalResult = intermediateResult + number3
             } else {
-                // 减法：最终结果 = intermediateResult - number3，需要 >= 1 且 <= 40
+                // 减法：最终结果 = intermediateResult - number3，需要 >= 1 且 <= 70
                 // 确保 intermediateResult > number3，且最终结果 >= 1
                 guard intermediateResult > 1 else {
                     attempts += 1
@@ -357,8 +357,8 @@ class MathQuizManager: ObservableObject {
                 finalResult = intermediateResult - number3
             }
             
-            // 确保最终结果在1-40之间
-            guard finalResult >= 1 && finalResult <= 40 else {
+            // 确保最终结果在1-70之间
+            guard finalResult >= 1 && finalResult <= 70 else {
                 attempts += 1
                 continue
             }

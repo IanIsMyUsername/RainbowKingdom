@@ -191,11 +191,15 @@ struct DailyPracticeView: View {
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
                         
                         if let englishFillBlankRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语填空") {
-                            Text("得分: \(englishFillBlankRecord.score)/\(englishFillBlankRecord.totalQuestions) (\(String(format: "%.1f", englishFillBlankRecord.percentage))%)")
+                            // 统一显示10题，即使旧记录是5题
+                            let expectedTotal = 10
+                            let actualScore = englishFillBlankRecord.score
+                            let percentage = expectedTotal > 0 ? Double(actualScore) / Double(expectedTotal) * 100 : 0
+                            Text("得分: \(actualScore)/\(expectedTotal) (\(String(format: "%.1f", percentage))%)")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         } else {
-                            Text("未完成")
+                            Text("未完成 (0/10)")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
@@ -297,7 +301,7 @@ struct DailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("5个填空题，根据中文和提示填写完整单词")
+                            Text("10个填空题，根据中文和提示填写完整单词")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
@@ -333,7 +337,7 @@ struct DailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("20道加减法题目，40以内连续加减2个数")
+                            Text("10道加减法题目，70以内连续加减2个数")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
