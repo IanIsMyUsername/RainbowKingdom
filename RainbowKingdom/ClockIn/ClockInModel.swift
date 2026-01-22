@@ -326,7 +326,7 @@ class ClockInManager: ObservableObject {
     // MARK: - Realm数据加载和保存
     
     /// 从Realm加载所有数据
-    private func loadFromRealm() {
+    func loadFromRealm() {
         do {
             // 加载打卡记录
             let realmRecords = try dbManager.objects(RealmClockInRecord.self)
