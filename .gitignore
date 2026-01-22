@@ -22,6 +22,10 @@ DerivedData/
 *.perspectivev3
 !default.perspectivev3
 
+Pods/
+*.xcworkspace
+.spm.pods/
+.gestalt/
 ## Obj-C/Swift specific
 *.hmap
 

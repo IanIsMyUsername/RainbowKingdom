@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import RealmSwift
 
 // 测验题型枚举
-enum QuizQuestionType: String, CaseIterable, Codable {
+enum QuizQuestionType: String, CaseIterable, Codable, PersistableEnum {
     case chineseToEnglish = "汉语翻译成英语"
     case englishToChinese = "英语翻译成汉语"
     
@@ -18,7 +19,7 @@ enum QuizQuestionType: String, CaseIterable, Codable {
 }
 
 // 测验类型枚举
-enum QuizType: String, CaseIterable, Codable {
+enum QuizType: String, CaseIterable, Codable, PersistableEnum {
     case multipleChoice = "选择题"
     case fillInBlank = "填空题"
     
@@ -56,14 +57,14 @@ enum QuizCategory: String, CaseIterable {
 }
 
 // 题目类型枚举
-enum QuestionType: String, CaseIterable, Codable {
+enum QuestionType: String, CaseIterable, Codable, PersistableEnum {
     case translation = "翻译题"
     case multipleChoice = "选择题"
     case fillInBlank = "填空题"
 }
 
 // 测验范围枚举
-enum QuizScope: String, CaseIterable, Codable {
+enum QuizScope: String, CaseIterable, Codable, PersistableEnum {
     case all = "全部词汇"
     case selectedGroup = "选中组"
     case today = "今天添加"

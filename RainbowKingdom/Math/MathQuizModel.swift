@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import RealmSwift
 
 // 数学运算类型枚举
-enum MathOperationType: String, CaseIterable, Codable {
+enum MathOperationType: String, CaseIterable, Codable, PersistableEnum {
     case addition = "加法"
     case subtraction = "减法"
     case mixed = "混合运算"
@@ -20,7 +21,7 @@ enum MathOperationType: String, CaseIterable, Codable {
 
 // 数学题目模型
 struct MathQuestion: Identifiable, Codable {
-    let id = UUID()
+    let id: UUID
     let number1: Int
     let number2: Int
     let number3: Int
@@ -30,7 +31,8 @@ struct MathQuestion: Identifiable, Codable {
     let correctAnswer: Int
     let options: [Int]? // 选择题选项
     
-    init(number1: Int, number2: Int, number3: Int, operation: MathOperationType, operation2: MathOperationType) {
+    init(id: UUID = UUID(), number1: Int, number2: Int, number3: Int, operation: MathOperationType, operation2: MathOperationType) {
+        self.id = id
         self.number1 = number1
         self.number2 = number2
         self.number3 = number3

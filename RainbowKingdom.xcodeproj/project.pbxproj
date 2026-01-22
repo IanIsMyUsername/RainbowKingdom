@@ -6,13 +6,22 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C85A10ADA6D759B52960799E /* Pods_RainbowKingdom.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 006C25C9467C12EE991B7DC6 /* Pods_RainbowKingdom.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		006C25C9467C12EE991B7DC6 /* Pods_RainbowKingdom.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RainbowKingdom.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RainbowKingdom.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		960D79AA6C3DF68165170B59 /* Pods-RainbowKingdom.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RainbowKingdom.release.xcconfig"; path = "Target Support Files/Pods-RainbowKingdom/Pods-RainbowKingdom.release.xcconfig"; sourceTree = "<group>"; };
+		A405C5F48897959A522E3FC6 /* Pods-RainbowKingdom.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RainbowKingdom.debug.xcconfig"; path = "Target Support Files/Pods-RainbowKingdom/Pods-RainbowKingdom.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5222DE082E73086500FAB58B /* RainbowKingdom */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = RainbowKingdom;
 			sourceTree = "<group>";
 		};
@@ -23,17 +32,28 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C85A10ADA6D759B52960799E /* Pods_RainbowKingdom.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		393AA5A64BFC75ED846437DD /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				006C25C9467C12EE991B7DC6 /* Pods_RainbowKingdom.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		5222DDFD2E73086500FAB58B = {
 			isa = PBXGroup;
 			children = (
 				5222DE082E73086500FAB58B /* RainbowKingdom */,
 				5222DE072E73086500FAB58B /* Products */,
+				D4495F025FA0AC991E9F2B8F /* Pods */,
+				393AA5A64BFC75ED846437DD /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -45,6 +65,16 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		D4495F025FA0AC991E9F2B8F /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				A405C5F48897959A522E3FC6 /* Pods-RainbowKingdom.debug.xcconfig */,
+				960D79AA6C3DF68165170B59 /* Pods-RainbowKingdom.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -52,9 +82,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5222DE142E73086600FAB58B /* Build configuration list for PBXNativeTarget "RainbowKingdom" */;
 			buildPhases = (
+				621DDF3857EC09A93881ACEE /* [CP] Check Pods Manifest.lock */,
 				5222DE022E73086500FAB58B /* Sources */,
 				5222DE032E73086500FAB58B /* Frameworks */,
 				5222DE042E73086500FAB58B /* Resources */,
+				7E128BC90A6572DBD688AF87 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -111,6 +143,48 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		621DDF3857EC09A93881ACEE /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-RainbowKingdom-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		7E128BC90A6572DBD688AF87 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-RainbowKingdom/Pods-RainbowKingdom-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-RainbowKingdom/Pods-RainbowKingdom-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-RainbowKingdom/Pods-RainbowKingdom-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5222DE022E73086500FAB58B /* Sources */ = {
@@ -244,6 +318,7 @@
 		};
 		5222DE152E73086600FAB58B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A405C5F48897959A522E3FC6 /* Pods-RainbowKingdom.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -258,7 +333,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -274,6 +349,7 @@
 		};
 		5222DE162E73086600FAB58B /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 960D79AA6C3DF68165170B59 /* Pods-RainbowKingdom.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -288,7 +364,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

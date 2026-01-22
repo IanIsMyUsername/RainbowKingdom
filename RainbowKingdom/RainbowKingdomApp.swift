@@ -9,9 +9,18 @@ import SwiftUI
 
 @main
 struct RainbowKingdomApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+  init() {
+    printSandBoxPath()
+  }
+  var body: some Scene {
+    WindowGroup {
+      ContentView()
     }
+  }
+  
+  func printSandBoxPath() {
+    if let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+      print("📂 沙盒 Documents 路径:\n\(url.path)")
+    }
+  }
 }
