@@ -46,14 +46,6 @@ struct FullScreenDailyPracticeView: View {
         .navigationTitle("每日一练")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    // 返回主菜单的逻辑由父视图处理
-                }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.blue)
-                }
-            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
                     showingMultiplicationConfig = true
