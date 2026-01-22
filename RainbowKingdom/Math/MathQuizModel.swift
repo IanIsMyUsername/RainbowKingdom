@@ -139,7 +139,7 @@ struct MathQuestion: Identifiable, Codable {
 
 // 数学练习结果模型
 struct MathQuizResult: Identifiable, Codable {
-    let id = UUID()
+    let id: UUID
     let operationType: MathOperationType
     let totalQuestions: Int
     let correctAnswers: Int
@@ -148,6 +148,18 @@ struct MathQuizResult: Identifiable, Codable {
     let completedDate: Date
     let questions: [MathQuestion]
     let userAnswers: [String]
+    
+    init(id: UUID = UUID(), operationType: MathOperationType, totalQuestions: Int, correctAnswers: Int, score: Int, timeSpent: TimeInterval, completedDate: Date, questions: [MathQuestion], userAnswers: [String]) {
+        self.id = id
+        self.operationType = operationType
+        self.totalQuestions = totalQuestions
+        self.correctAnswers = correctAnswers
+        self.score = score
+        self.timeSpent = timeSpent
+        self.completedDate = completedDate
+        self.questions = questions
+        self.userAnswers = userAnswers
+    }
     
     var percentage: Double {
         guard totalQuestions > 0 else { return 0 }
@@ -178,11 +190,10 @@ class MathQuizManager: ObservableObject {
     @Published var quizStartTime: Date?
     @Published var currentOperationType: MathOperationType = .mixed
     
-    private let userDefaults = UserDefaults.standard
-    private let mathQuizResultsKey = "SavedMathQuizResults"
+    private let dbManager = DatabaseManager.shared
     
     init() {
-        loadQuizResults()
+        loadFromRealm()
     }
     
     // 开始新的数学练习
@@ -215,7 +226,7 @@ class MathQuizManager: ObservableObject {
         )
         
         quizResults.append(result)
-        saveQuizResults()
+        saveToRealm(result)
         
         isQuizActive = false
         quizStartTime = nil
@@ -390,18 +401,27 @@ class MathQuizManager: ObservableObject {
         return correctCount
     }
     
-    // 保存练习结果
-    private func saveQuizResults() {
-        if let encoded = try? JSONEncoder().encode(quizResults) {
-            userDefaults.set(encoded, forKey: mathQuizResultsKey)
+    // MARK: - Realm数据加载和保存
+    
+    /// 从Realm加载练习结果
+    private func loadFromRealm() {
+        do {
+            let realmResults = try dbManager.objects(RealmMathQuizResult.self)
+            quizResults = realmResults.map { MathQuizResult(from: $0) }
+            print("从Realm加载了 \(quizResults.count) 条数学练习结果")
+        } catch {
+            print("从Realm加载数学练习结果失败: \(error)")
         }
     }
     
-    // 加载练习结果
-    private func loadQuizResults() {
-        if let data = userDefaults.data(forKey: mathQuizResultsKey),
-           let decoded = try? JSONDecoder().decode([MathQuizResult].self, from: data) {
-            quizResults = decoded
+    /// 保存练习结果到Realm
+    private func saveToRealm(_ result: MathQuizResult) {
+        do {
+            let realmResult = result.toRealm()
+            try dbManager.add(realmResult)
+            print("已保存数学练习结果到Realm")
+        } catch {
+            print("保存数学练习结果失败: \(error)")
         }
     }
     

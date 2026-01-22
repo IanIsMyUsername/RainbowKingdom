@@ -36,7 +36,7 @@ struct MultiplicationConfigView: View {
                         Text("题目数量: \(englishTranslationQuestionCount)")
                             .font(.headline)
                         
-                        Slider(value: Binding(
+                        Slider(value: Binding<Double>(
                             get: { Double(englishTranslationQuestionCount) },
                             set: { englishTranslationQuestionCount = Int($0) }
                         ), in: 10...50, step: 1)
@@ -58,7 +58,7 @@ struct MultiplicationConfigView: View {
                         Text("单词时间范围: 最近 \(englishTranslationWeeks) 周")
                             .font(.headline)
                         
-                        Slider(value: Binding(
+                        Slider(value: Binding<Double>(
                             get: { Double(englishTranslationWeeks) },
                             set: { englishTranslationWeeks = Int($0) }
                         ), in: 1...4, step: 1)
@@ -83,7 +83,7 @@ struct MultiplicationConfigView: View {
                         Text("题目数量: \(englishFillBlankQuestionCount)")
                             .font(.headline)
                         
-                        Slider(value: Binding(
+                        Slider(value: Binding<Double>(
                             get: { Double(englishFillBlankQuestionCount) },
                             set: { englishFillBlankQuestionCount = Int($0) }
                         ), in: 5...30, step: 1)
@@ -105,7 +105,7 @@ struct MultiplicationConfigView: View {
                         Text("单词时间范围: 最近 \(englishFillBlankWeeks) 周")
                             .font(.headline)
                         
-                        Slider(value: Binding(
+                        Slider(value: Binding<Double>(
                             get: { Double(englishFillBlankWeeks) },
                             set: { englishFillBlankWeeks = Int($0) }
                         ), in: 1...4, step: 1)
@@ -130,7 +130,7 @@ struct MultiplicationConfigView: View {
                         Text("题目数量: \(additionSubtractionQuestionCount)")
                             .font(.headline)
                         
-                        Slider(value: Binding(
+                        Slider(value: Binding<Double>(
                             get: { Double(additionSubtractionQuestionCount) },
                             set: { additionSubtractionQuestionCount = Int($0) }
                         ), in: 5...30, step: 1)
@@ -152,7 +152,7 @@ struct MultiplicationConfigView: View {
                         Text("数字范围: \(additionSubtractionMaxNumber) 以内")
                             .font(.headline)
                         
-                        Slider(value: Binding(
+                        Slider(value: Binding<Double>(
                             get: { Double(additionSubtractionMaxNumber) },
                             set: { additionSubtractionMaxNumber = Int($0) }
                         ), in: 20...100, step: 10)
@@ -177,7 +177,7 @@ struct MultiplicationConfigView: View {
                         Text("题目数量: \(multiplicationQuestionCount)")
                             .font(.headline)
                         
-                        Slider(value: Binding(
+                        Slider(value: Binding<Double>(
                             get: { Double(multiplicationQuestionCount) },
                             set: { multiplicationQuestionCount = Int($0) }
                         ), in: 5...30, step: 1)
@@ -203,7 +203,7 @@ struct MultiplicationConfigView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
-                        Slider(value: Binding(
+                        Slider(value: Binding<Double>(
                             get: { Double(multiplicationMaxNumber) },
                             set: { multiplicationMaxNumber = Int($0) }
                         ), in: 3...10, step: 1)

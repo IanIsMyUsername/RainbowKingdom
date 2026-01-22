@@ -78,7 +78,7 @@ enum QuizScope: String, CaseIterable, Codable, PersistableEnum {
 
 // 测验题目模型
 struct QuizQuestion: Identifiable, Codable {
-    let id = UUID()
+    let id: UUID
     let vocabulary: Vocabulary
     let questionType: QuestionType
     let question: String
@@ -86,7 +86,8 @@ struct QuizQuestion: Identifiable, Codable {
     let options: [String]? // 选择题选项
     let hint: String? // 提示信息
     
-    init(vocabulary: Vocabulary, questionType: QuestionType, question: String, correctAnswer: String, options: [String]? = nil, hint: String? = nil) {
+    init(id: UUID = UUID(), vocabulary: Vocabulary, questionType: QuestionType, question: String, correctAnswer: String, options: [String]? = nil, hint: String? = nil) {
+        self.id = id
         self.vocabulary = vocabulary
         self.questionType = questionType
         self.question = question
@@ -98,7 +99,7 @@ struct QuizQuestion: Identifiable, Codable {
 
 // 测验结果模型
 struct QuizResult: Identifiable, Codable {
-    let id = UUID()
+    let id: UUID
     let questionType: QuizQuestionType?
     let quizType: QuizType?
     let scope: QuizScope
@@ -109,6 +110,20 @@ struct QuizResult: Identifiable, Codable {
     let completedDate: Date
     let questions: [QuizQuestion]
     let userAnswers: [String]
+    
+    init(id: UUID = UUID(), questionType: QuizQuestionType? = nil, quizType: QuizType? = nil, scope: QuizScope, totalQuestions: Int, correctAnswers: Int, score: Int, timeSpent: TimeInterval, completedDate: Date, questions: [QuizQuestion], userAnswers: [String]) {
+        self.id = id
+        self.questionType = questionType
+        self.quizType = quizType
+        self.scope = scope
+        self.totalQuestions = totalQuestions
+        self.correctAnswers = correctAnswers
+        self.score = score
+        self.timeSpent = timeSpent
+        self.completedDate = completedDate
+        self.questions = questions
+        self.userAnswers = userAnswers
+    }
     
     var percentage: Double {
         guard totalQuestions > 0 else { return 0 }
@@ -140,11 +155,10 @@ class QuizManager: ObservableObject {
     @Published var currentQuestionType: QuizQuestionType?
     @Published var currentQuizType: QuizType?
     
-    private let userDefaults = UserDefaults.standard
-    private let quizResultsKey = "SavedQuizResults"
+    private let dbManager = DatabaseManager.shared
     
     init() {
-        loadQuizResults()
+        loadFromRealm()
     }
     
     // 开始新测验
@@ -186,7 +200,7 @@ class QuizManager: ObservableObject {
         )
         
         quizResults.append(result)
-        saveQuizResults()
+        saveToRealm(result)
         
         isQuizActive = false
         quizStartTime = nil
@@ -412,18 +426,27 @@ class QuizManager: ObservableObject {
         return correctCount
     }
     
-    // 保存测验结果
-    private func saveQuizResults() {
-        if let encoded = try? JSONEncoder().encode(quizResults) {
-            userDefaults.set(encoded, forKey: quizResultsKey)
+    // MARK: - Realm数据加载和保存
+    
+    /// 从Realm加载练习结果
+    private func loadFromRealm() {
+        do {
+            let realmResults = try dbManager.objects(RealmQuizResult.self)
+            quizResults = realmResults.map { QuizResult(from: $0) }
+            print("从Realm加载了 \(quizResults.count) 条英语测验结果")
+        } catch {
+            print("从Realm加载英语测验结果失败: \(error)")
         }
     }
     
-    // 加载测验结果
-    private func loadQuizResults() {
-        if let data = userDefaults.data(forKey: quizResultsKey),
-           let decoded = try? JSONDecoder().decode([QuizResult].self, from: data) {
-            quizResults = decoded
+    /// 保存练习结果到Realm
+    private func saveToRealm(_ result: QuizResult) {
+        do {
+            let realmResult = result.toRealm()
+            try dbManager.add(realmResult)
+            print("已保存英语测验结果到Realm")
+        } catch {
+            print("保存英语测验结果失败: \(error)")
         }
     }
     

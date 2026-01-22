@@ -6,17 +6,19 @@
 //
 
 import Foundation
+import RealmSwift
 
 // 乘法题目模型
 struct MultiplicationQuestion: Identifiable, Codable {
-    let id = UUID()
+    let id: UUID
     let number1: Int
     let number2: Int
     let question: String
     let correctAnswer: Int
     let options: [Int]? // 选择题选项
     
-    init(number1: Int, number2: Int) {
+    init(id: UUID = UUID(), number1: Int, number2: Int) {
+        self.id = id
         self.number1 = number1
         self.number2 = number2
         self.correctAnswer = number1 * number2
@@ -85,7 +87,7 @@ struct MultiplicationQuestion: Identifiable, Codable {
 
 // 乘法练习结果模型
 struct MultiplicationQuizResult: Identifiable, Codable {
-    let id = UUID()
+    let id: UUID
     let maxNumber: Int // 数字范围上限
     let totalQuestions: Int
     let correctAnswers: Int
@@ -94,6 +96,18 @@ struct MultiplicationQuizResult: Identifiable, Codable {
     let completedDate: Date
     let questions: [MultiplicationQuestion]
     let userAnswers: [String]
+    
+    init(id: UUID = UUID(), maxNumber: Int, totalQuestions: Int, correctAnswers: Int, score: Int, timeSpent: TimeInterval, completedDate: Date, questions: [MultiplicationQuestion], userAnswers: [String]) {
+        self.id = id
+        self.maxNumber = maxNumber
+        self.totalQuestions = totalQuestions
+        self.correctAnswers = correctAnswers
+        self.score = score
+        self.timeSpent = timeSpent
+        self.completedDate = completedDate
+        self.questions = questions
+        self.userAnswers = userAnswers
+    }
     
     var percentage: Double {
         guard totalQuestions > 0 else { return 0 }
@@ -135,12 +149,10 @@ class MultiplicationQuizManager: ObservableObject {
     @Published var quizStartTime: Date?
     @Published var config: MultiplicationQuizConfig = MultiplicationQuizConfig()
     
-    private let userDefaults = UserDefaults.standard
-    private let multiplicationQuizResultsKey = "SavedMultiplicationQuizResults"
-    private let multiplicationQuizConfigKey = "MultiplicationQuizConfig"
+    private let dbManager = DatabaseManager.shared
     
     init() {
-        loadQuizResults()
+        loadFromRealm()
         loadConfig()
     }
     
@@ -181,7 +193,7 @@ class MultiplicationQuizManager: ObservableObject {
         )
         
         quizResults.append(result)
-        saveQuizResults()
+        saveToRealm(result)
         
         isQuizActive = false
         quizStartTime = nil
@@ -256,31 +268,45 @@ class MultiplicationQuizManager: ObservableObject {
         return correctCount
     }
     
-    // 保存练习结果
-    private func saveQuizResults() {
-        if let encoded = try? JSONEncoder().encode(quizResults) {
-            userDefaults.set(encoded, forKey: multiplicationQuizResultsKey)
+    // MARK: - Realm数据加载和保存
+    
+    /// 从Realm加载练习结果
+    private func loadFromRealm() {
+        do {
+            let realmResults = try dbManager.objects(RealmMultiplicationQuizResult.self)
+            quizResults = realmResults.map { MultiplicationQuizResult(from: $0) }
+            print("从Realm加载了 \(quizResults.count) 条乘法练习结果")
+        } catch {
+            print("从Realm加载乘法练习结果失败: \(error)")
         }
     }
     
-    // 加载练习结果
-    private func loadQuizResults() {
-        if let data = userDefaults.data(forKey: multiplicationQuizResultsKey),
-           let decoded = try? JSONDecoder().decode([MultiplicationQuizResult].self, from: data) {
-            quizResults = decoded
+    /// 保存练习结果到Realm
+    private func saveToRealm(_ result: MultiplicationQuizResult) {
+        do {
+            let realmResult = result.toRealm()
+            try dbManager.add(realmResult)
+            print("已保存乘法练习结果到Realm")
+        } catch {
+            print("保存乘法练习结果失败: \(error)")
         }
     }
+    
+    // MARK: - 配置管理（仍使用UserDefaults，因为配置是单例且简单）
     
     // 保存配置
     func saveConfig() {
+        // 配置可以继续使用UserDefaults，因为它是简单的单例数据
+        let userDefaults = UserDefaults.standard
         if let encoded = try? JSONEncoder().encode(config) {
-            userDefaults.set(encoded, forKey: multiplicationQuizConfigKey)
+            userDefaults.set(encoded, forKey: "MultiplicationQuizConfig")
         }
     }
     
     // 加载配置
-    func loadConfig() {
-        if let data = userDefaults.data(forKey: multiplicationQuizConfigKey),
+    private func loadConfig() {
+        let userDefaults = UserDefaults.standard
+        if let data = userDefaults.data(forKey: "MultiplicationQuizConfig"),
            let decoded = try? JSONDecoder().decode(MultiplicationQuizConfig.self, from: data) {
             config = decoded
         }

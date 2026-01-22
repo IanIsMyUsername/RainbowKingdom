@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import RealmSwift
 
 // 打卡记录模型
 struct ClockInRecord: Identifiable, Codable {
-    let id = UUID()
+    let id: UUID
     let date: Date
     let subject: String
     let score: Int
@@ -18,6 +19,18 @@ struct ClockInRecord: Identifiable, Codable {
     let completedDate: Date
     let questions: [QuizQuestion]? // 改为可选，支持数学练习
     let userAnswers: [String]
+    
+    init(id: UUID = UUID(), date: Date, subject: String, score: Int, totalQuestions: Int, timeSpent: TimeInterval, completedDate: Date, questions: [QuizQuestion]? = nil, userAnswers: [String]) {
+        self.id = id
+        self.date = date
+        self.subject = subject
+        self.score = score
+        self.totalQuestions = totalQuestions
+        self.timeSpent = timeSpent
+        self.completedDate = completedDate
+        self.questions = questions
+        self.userAnswers = userAnswers
+    }
     
     var percentage: Double {
         guard totalQuestions > 0 else { return 0 }
@@ -79,47 +92,61 @@ class ClockInManager: ObservableObject {
     @Published var todayRecord: ClockInRecord?
     @Published var calendarState: CalendarState = CalendarState()
     
-    private let userDefaults = UserDefaults.standard
-    private let clockInRecordsKey = "ClockInRecords"
-    private let statsKey = "DailyPracticeStats"
-    private let calendarStateKey = "CalendarState"
+    private let dbManager = DatabaseManager.shared
     
     init() {
-        loadClockInRecords()
-        loadStats()
-        loadCalendarState()
+        loadFromRealm()
         updateCalendarStateIfNeeded()
         updateTodayRecord()
-        addSeptemberRecords()
     }
     
     // 添加打卡记录（只保留每天每科目的最高分记录）
     func addClockInRecord(_ record: ClockInRecord) {
         let today = Calendar.current.startOfDay(for: Date())
         
-        // 查找今天同一科目的记录
-        if let existingIndex = clockInRecords.firstIndex(where: { 
-            Calendar.current.isDate($0.date, inSameDayAs: today) && $0.subject == record.subject
-        }) {
-            let existingRecord = clockInRecords[existingIndex]
-            
-            // 比较分数，只保留更高的分数
-            if record.score > existingRecord.score {
-                clockInRecords[existingIndex] = record
-                print("更新 \(record.subject) 打卡记录：\(existingRecord.score) -> \(record.score)")
-            } else {
-                print("保持 \(record.subject) 打卡记录：\(existingRecord.score) (新分数 \(record.score) 较低)")
-                return // 不保存较低分数的记录
+        do {
+            // 查找今天同一科目的记录
+            let realmRecords = try dbManager.objects(RealmClockInRecord.self)
+            let existingRecord = realmRecords.first { realmRecord in
+                Calendar.current.isDate(realmRecord.date, inSameDayAs: today) && realmRecord.subject == record.subject
             }
-        } else {
-            // 添加新记录
-            clockInRecords.append(record)
-            print("添加新的 \(record.subject) 打卡记录：\(record.score)")
+            
+            if let existing = existingRecord {
+                // 比较分数，只保留更高的分数
+                if record.score > existing.score {
+                    try dbManager.update(existing) { realmRecord in
+                        realmRecord.date = record.date
+                        realmRecord.subject = record.subject
+                        realmRecord.score = record.score
+                        realmRecord.totalQuestions = record.totalQuestions
+                        realmRecord.timeSpent = record.timeSpent
+                        realmRecord.completedDate = record.completedDate
+                        // 更新questions和userAnswers
+                        realmRecord.questions.removeAll()
+                        realmRecord.userAnswers.removeAll()
+                        let realmRecordNew = record.toRealm()
+                        realmRecord.questions.append(objectsIn: realmRecordNew.questions)
+                        realmRecord.userAnswers.append(objectsIn: realmRecordNew.userAnswers)
+                    }
+                    print("更新 \(record.subject) 打卡记录：\(existing.score) -> \(record.score)")
+                } else {
+                    print("保持 \(record.subject) 打卡记录：\(existing.score) (新分数 \(record.score) 较低)")
+                    return // 不保存较低分数的记录
+                }
+            } else {
+                // 添加新记录
+                let realmRecord = record.toRealm()
+                try dbManager.add(realmRecord)
+                print("添加新的 \(record.subject) 打卡记录：\(record.score)")
+            }
+            
+            // 重新加载数据
+            loadFromRealm()
+            updateStats()
+            updateTodayRecord()
+        } catch {
+            print("添加打卡记录失败: \(error)")
         }
-        
-        saveClockInRecords()
-        updateStats()
-        updateTodayRecord()
     }
     
     // 获取指定日期的打卡记录
@@ -295,167 +322,76 @@ class ClockInManager: ObservableObject {
         return (totalDays, completedDays, averageScore)
     }
     
-    // 添加2025年9月20号和21号的打卡记录
-    func addSeptemberRecords() {
-        let calendar = Calendar.current
-        
-        // 创建9月20号的记录
-        if let date20 = calendar.date(from: DateComponents(year: 2025, month: 9, day: 20)) {
-            let englishRecord20 = ClockInRecord(
-                date: date20,
-                subject: "英语翻译",
-                score: 10,
-                totalQuestions: 10,
-                timeSpent: 300, // 5分钟
-                completedDate: date20,
-                questions: nil,
-                userAnswers: []
-            )
-            
-            let mathRecord20 = ClockInRecord(
-                date: date20,
-                subject: "加减法",
-                score: 10,
-                totalQuestions: 10,
-                timeSpent: 240, // 4分钟
-                completedDate: date20,
-                questions: nil,
-                userAnswers: []
-            )
-            
-            addClockInRecord(englishRecord20)
-            addClockInRecord(mathRecord20)
-            print("已添加2025年9月20号的打卡记录")
-        }
-        
-        // 创建9月21号的记录
-        if let date21 = calendar.date(from: DateComponents(year: 2025, month: 9, day: 21)) {
-            let englishRecord21 = ClockInRecord(
-                date: date21,
-                subject: "英语翻译",
-                score: 10,
-                totalQuestions: 10,
-                timeSpent: 280, // 4分40秒
-                completedDate: date21,
-                questions: nil,
-                userAnswers: []
-            )
-            
-            let mathRecord21 = ClockInRecord(
-                date: date21,
-                subject: "加减法",
-                score: 10,
-                totalQuestions: 10,
-                timeSpent: 320, // 5分20秒
-                completedDate: date21,
-                questions: nil,
-                userAnswers: []
-            )
-            
-            addClockInRecord(englishRecord21)
-            addClockInRecord(mathRecord21)
-            print("已添加2025年9月21号的打卡记录")
-        }
-        
-        print("完成添加2025年9月20号和21号的打卡记录（都是100分）")
-    }
     
-    // 保存打卡记录
-    private func saveClockInRecords() {
-        if let encoded = try? JSONEncoder().encode(clockInRecords) {
-            userDefaults.set(encoded, forKey: clockInRecordsKey)
-        }
-    }
+    // MARK: - Realm数据加载和保存
     
-    // 加载打卡记录
-    private func loadClockInRecords() {
-        if let data = userDefaults.data(forKey: clockInRecordsKey),
-           let decoded = try? JSONDecoder().decode([ClockInRecord].self, from: data) {
-            // 迁移旧的记录
-            var migratedRecords = decoded
-            var englishMigratedCount = 0
-            var mathMigratedCount = 0
+    /// 从Realm加载所有数据
+    private func loadFromRealm() {
+        do {
+            // 加载打卡记录
+            let realmRecords = try dbManager.objects(RealmClockInRecord.self)
+            clockInRecords = realmRecords.map { ClockInRecord(from: $0) }
             
-            for i in 0..<migratedRecords.count {
-                let oldRecord = migratedRecords[i]
-                var newRecord: ClockInRecord? = nil
-                
-                // 迁移"英语"记录为"英语翻译"
-                if oldRecord.subject == "英语" {
-                    newRecord = ClockInRecord(
-                        date: oldRecord.date,
-                        subject: "英语翻译",
-                        score: oldRecord.score,
-                        totalQuestions: oldRecord.totalQuestions,
-                        timeSpent: oldRecord.timeSpent,
-                        completedDate: oldRecord.completedDate,
-                        questions: oldRecord.questions,
-                        userAnswers: oldRecord.userAnswers
-                    )
-                    englishMigratedCount += 1
-                }
-                // 迁移"数学"记录为"加减法"
-                else if oldRecord.subject == "数学" {
-                    newRecord = ClockInRecord(
-                        date: oldRecord.date,
-                        subject: "加减法",
-                        score: oldRecord.score,
-                        totalQuestions: oldRecord.totalQuestions,
-                        timeSpent: oldRecord.timeSpent,
-                        completedDate: oldRecord.completedDate,
-                        questions: oldRecord.questions,
-                        userAnswers: oldRecord.userAnswers
-                    )
-                    mathMigratedCount += 1
-                }
-                
-                if let newRecord = newRecord {
-                    migratedRecords[i] = newRecord
-                }
+            // 加载统计信息
+            if let realmStats = try dbManager.object(ofType: RealmDailyPracticeStats.self, forPrimaryKey: "singleton") {
+                stats = DailyPracticeStats(from: realmStats)
+            } else {
+                // 如果没有统计信息，创建新的
+                let newStats = DailyPracticeStats()
+                try dbManager.add(newStats.toRealm())
+                stats = newStats
             }
             
-            clockInRecords = migratedRecords
-            
-            // 如果有迁移，保存更新后的记录
-            if englishMigratedCount > 0 || mathMigratedCount > 0 {
-                saveClockInRecords()
-                if englishMigratedCount > 0 {
-                    print("已迁移 \(englishMigratedCount) 条'英语'记录为'英语翻译'")
-                }
-                if mathMigratedCount > 0 {
-                    print("已迁移 \(mathMigratedCount) 条'数学'记录为'加减法'")
-                }
+            // 加载日历状态
+            if let realmState = try dbManager.object(ofType: RealmCalendarState.self, forPrimaryKey: "singleton") {
+                calendarState = CalendarState(from: realmState)
+            } else {
+                // 如果没有日历状态，创建新的
+                let newState = CalendarState()
+                try dbManager.add(newState.toRealm())
+                calendarState = newState
             }
+            
+            print("从Realm加载了 \(clockInRecords.count) 条打卡记录")
+        } catch {
+            print("从Realm加载数据失败: \(error)")
         }
     }
     
-    // 保存统计信息
+    /// 保存统计信息到Realm
     private func saveStats() {
-        if let encoded = try? JSONEncoder().encode(stats) {
-            userDefaults.set(encoded, forKey: statsKey)
+        do {
+            if let realmStats = try dbManager.object(ofType: RealmDailyPracticeStats.self, forPrimaryKey: "singleton") {
+                try dbManager.update(realmStats) { stats in
+                    stats.totalDays = self.stats.totalDays
+                    stats.completedDays = self.stats.completedDays
+                    stats.currentStreak = self.stats.currentStreak
+                    stats.longestStreak = self.stats.longestStreak
+                    stats.averageScore = self.stats.averageScore
+                    stats.lastPracticeDate = self.stats.lastPracticeDate
+                }
+            } else {
+                try dbManager.add(stats.toRealm())
+            }
+        } catch {
+            print("保存统计信息失败: \(error)")
         }
     }
     
-    // 加载统计信息
-    private func loadStats() {
-        if let data = userDefaults.data(forKey: statsKey),
-           let decoded = try? JSONDecoder().decode(DailyPracticeStats.self, from: data) {
-            stats = decoded
-        }
-    }
-    
-    // 加载日历状态
-    private func loadCalendarState() {
-        if let data = userDefaults.data(forKey: calendarStateKey),
-           let decoded = try? JSONDecoder().decode(CalendarState.self, from: data) {
-            calendarState = decoded
-        }
-    }
-    
-    // 保存日历状态
+    /// 保存日历状态到Realm
     private func saveCalendarState() {
-        if let encoded = try? JSONEncoder().encode(calendarState) {
-            userDefaults.set(encoded, forKey: calendarStateKey)
+        do {
+            if let realmState = try dbManager.object(ofType: RealmCalendarState.self, forPrimaryKey: "singleton") {
+                try dbManager.update(realmState) { state in
+                    state.startDate = self.calendarState.startDate
+                    state.endDate = self.calendarState.endDate
+                    state.lastUpdateDate = self.calendarState.lastUpdateDate
+                }
+            } else {
+                try dbManager.add(calendarState.toRealm())
+            }
+        } catch {
+            print("保存日历状态失败: \(error)")
         }
     }
     
