@@ -9,6 +9,14 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var isDailyPracticeActive = true
+    @State private var tapCount = 0
+    @State private var lastTapTime: Date?
+    @State private var showDatabaseManagement = false
+    
+    // 连续点击的时间间隔阈值（秒），超过此时间会重置计数
+    private let tapIntervalThreshold: TimeInterval = 1.0
+    // 需要连续点击的次数
+    private let requiredTapCount = 6
     
     var body: some View {
         NavigationView {
@@ -18,6 +26,9 @@ struct ContentView: View {
                     .fontWeight(.bold)
                     .foregroundColor(.purple)
                     .padding(.top, 50)
+                    .onTapGesture {
+                        handleTitleTap()
+                    }
                 
                 Text("选择学习科目")
                     .font(.title2)
@@ -87,12 +98,54 @@ struct ContentView: View {
                         .cornerRadius(15)
                         .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
                     }
+                    
+                    // 隐藏的导航链接，用于程序化导航
+                    NavigationLink(destination: DatabaseManagementView(), isActive: $showDatabaseManagement) {
+                        EmptyView()
+                    }
+                    .hidden()
                 }
                 
                 Spacer()
             }
             .padding()
             .navigationBarHidden(true)
+        }
+    }
+    
+    /// 处理标题点击事件
+    private func handleTitleTap() {
+        let now = Date()
+        
+        // 检查是否在时间间隔内（连续点击）
+        if let lastTap = lastTapTime {
+            let timeInterval = now.timeIntervalSince(lastTap)
+            if timeInterval > tapIntervalThreshold {
+                // 超过时间间隔，重置计数
+                tapCount = 1
+            } else {
+                // 在时间间隔内，增加计数
+                tapCount += 1
+            }
+        } else {
+            // 第一次点击
+            tapCount = 1
+        }
+        
+        lastTapTime = now
+        
+        // 检查是否达到要求的点击次数
+        if tapCount >= requiredTapCount {
+            // 直接打开数据库管理界面
+            showDatabaseManagement = true
+            
+            // 重置计数，避免重复触发
+            tapCount = 0
+            lastTapTime = nil
+            
+            // 添加触觉反馈
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
         }
     }
 }

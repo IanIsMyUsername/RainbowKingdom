@@ -263,7 +263,7 @@ class VocabularyManager: ObservableObject {
     // MARK: - Realm数据加载
     
     /// 从Realm加载词汇和组
-    private func loadFromRealm() {
+    func loadFromRealm() {
         do {
             // 加载词汇
             let realmVocabularies = try dbManager.objects(RealmVocabulary.self)
