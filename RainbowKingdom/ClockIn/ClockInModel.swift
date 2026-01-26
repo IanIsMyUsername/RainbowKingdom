@@ -103,19 +103,21 @@ class ClockInManager: ObservableObject {
     // 添加打卡记录（只保留每天每科目的最高分记录）
     func addClockInRecord(_ record: ClockInRecord) {
         let today = Calendar.current.startOfDay(for: Date())
+        // 统一使用今天的开始时间作为date字段，确保日期比较的一致性
+        let recordDate = Calendar.current.startOfDay(for: record.date)
         
         do {
             // 查找今天同一科目的记录
             let realmRecords = try dbManager.objects(RealmClockInRecord.self)
             let existingRecord = realmRecords.first { realmRecord in
-                Calendar.current.isDate(realmRecord.date, inSameDayAs: today) && realmRecord.subject == record.subject
+                Calendar.current.isDate(realmRecord.date, inSameDayAs: recordDate) && realmRecord.subject == record.subject
             }
             
             if let existing = existingRecord {
                 // 比较分数，只保留更高的分数
                 if record.score > existing.score {
                     try dbManager.update(existing) { realmRecord in
-                        realmRecord.date = record.date
+                        realmRecord.date = recordDate  // 使用统一的日期（今天的开始时间）
                         realmRecord.subject = record.subject
                         realmRecord.score = record.score
                         realmRecord.totalQuestions = record.totalQuestions
@@ -124,20 +126,23 @@ class ClockInManager: ObservableObject {
                         // 更新questions和userAnswers
                         realmRecord.questions.removeAll()
                         realmRecord.userAnswers.removeAll()
-                        let realmRecordNew = record.toRealm()
+                        // 创建新的realm记录并更新date字段
+                        var realmRecordNew = record.toRealm()
+                        realmRecordNew.date = recordDate  // 确保使用统一的日期
                         realmRecord.questions.append(objectsIn: realmRecordNew.questions)
                         realmRecord.userAnswers.append(objectsIn: realmRecordNew.userAnswers)
                     }
-                    print("更新 \(record.subject) 打卡记录：\(existing.score) -> \(record.score)")
+                    print("更新 \(record.subject) 打卡记录：\(existing.score) -> \(record.score)，日期：\(recordDate)")
                 } else {
                     print("保持 \(record.subject) 打卡记录：\(existing.score) (新分数 \(record.score) 较低)")
                     return // 不保存较低分数的记录
                 }
             } else {
-                // 添加新记录
-                let realmRecord = record.toRealm()
+                // 添加新记录，需要修改date字段为今天的开始时间
+                var realmRecord = record.toRealm()
+                realmRecord.date = recordDate  // 使用统一的日期（今天的开始时间）
                 try dbManager.add(realmRecord)
-                print("添加新的 \(record.subject) 打卡记录：\(record.score)")
+                print("添加新的 \(record.subject) 打卡记录：\(record.score)，日期：\(recordDate)")
             }
             
             // 重新加载数据

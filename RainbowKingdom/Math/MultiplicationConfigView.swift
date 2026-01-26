@@ -17,7 +17,7 @@ struct MultiplicationConfigView: View {
     
     // 英语填空配置
     @State private var englishFillBlankQuestionCount: Int = 10
-    @State private var englishFillBlankWeeks: Int = 2
+    @State private var englishFillBlankWeeks: Int = 1
     
     // 加减法配置
     @State private var additionSubtractionQuestionCount: Int = 10
@@ -55,21 +55,21 @@ struct MultiplicationConfigView: View {
                     .padding(.vertical, 8)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("单词时间范围: 最近 \(englishTranslationWeeks) 周")
+                        Text("单词时间范围: 最近 \(englishTranslationWeeks) 个月")
                             .font(.headline)
                         
                         Slider(value: Binding<Double>(
                             get: { Double(englishTranslationWeeks) },
                             set: { englishTranslationWeeks = Int($0) }
-                        ), in: 1...4, step: 1)
+                        ), in: 1...6, step: 1)
                         .accentColor(.purple)
                         
                         HStack {
-                            Text("1周")
+                            Text("1个月")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Spacer()
-                            Text("4周")
+                            Text("6个月")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -102,21 +102,21 @@ struct MultiplicationConfigView: View {
                     .padding(.vertical, 8)
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("单词时间范围: 最近 \(englishFillBlankWeeks) 周")
+                        Text("单词时间范围: 最近 \(englishFillBlankWeeks) 个月")
                             .font(.headline)
                         
                         Slider(value: Binding<Double>(
                             get: { Double(englishFillBlankWeeks) },
                             set: { englishFillBlankWeeks = Int($0) }
-                        ), in: 1...4, step: 1)
+                        ), in: 1...6, step: 1)
                         .accentColor(.purple)
                         
                         HStack {
-                            Text("1周")
+                            Text("1个月")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Spacer()
-                            Text("4周")
+                            Text("6个月")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

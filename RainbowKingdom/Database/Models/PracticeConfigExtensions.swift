@@ -18,7 +18,7 @@ extension PracticeConfig {
         )
         self.englishFillBlank = EnglishFillBlankConfig(
             questionCount: realmConfig.englishFillBlank?.questionCount ?? 10,
-            vocabularyWeeks: realmConfig.englishFillBlank?.vocabularyWeeks ?? 2
+            vocabularyWeeks: realmConfig.englishFillBlank?.vocabularyWeeks ?? 1
         )
         self.additionSubtraction = AdditionSubtractionConfig(
             questionCount: realmConfig.additionSubtraction?.questionCount ?? 10,

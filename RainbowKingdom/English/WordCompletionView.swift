@@ -139,7 +139,10 @@ struct WordCompletionView: View {
     
     private func maskedWord(_ word: String) -> String {
         let words = word.components(separatedBy: " ")
-        return words.map { maskSingleWord($0) }.joined(separator: " ")
+        if words.count > 1 {
+            return maskSentenceWords(words)
+        }
+        return maskSingleWord(word)
     }
     
     private func maskSingleWord(_ word: String) -> String {
@@ -147,25 +150,56 @@ struct WordCompletionView: View {
         let letterCount = letters.count
         guard letterCount > 0 else { return word }
         
-        let maskCount = max(1, letterCount / 3)
+        let maskCount = max(1, (letterCount + 1) / 2)
         let visibleLetterCount = letterCount - maskCount
+        let maskPrefix = Bool.random()
         
         var result = ""
         var letterIndex = 0
         
         for char in word {
             if char.isLetter {
-                if letterIndex < visibleLetterCount {
-                    result.append(char)
+                let shouldShow: Bool
+                if maskPrefix {
+                    shouldShow = letterIndex >= maskCount
                 } else {
-                    result.append("_")
+                    shouldShow = letterIndex < visibleLetterCount
                 }
+                result.append(shouldShow ? char : "_")
                 letterIndex += 1
             } else {
                 result.append(char)
             }
         }
         
+        return result
+    }
+
+    // 句子按单词级别遮罩（遮住一半单词）
+    private func maskSentenceWords(_ words: [String]) -> String {
+        guard !words.isEmpty else { return "" }
+        let maskWordCount = max(1, (words.count + 1) / 2)
+        let startMaskIndex = max(0, words.count - maskWordCount)
+        
+        let maskedWords = words.enumerated().map { index, word in
+            if index >= startMaskIndex {
+                return maskWholeWord(word)
+            }
+            return word
+        }
+        
+        return maskedWords.joined(separator: " ")
+    }
+
+    private func maskWholeWord(_ word: String) -> String {
+        var result = ""
+        for char in word {
+            if char.isLetter {
+                result.append("_")
+            } else {
+                result.append(char)
+            }
+        }
         return result
     }
     

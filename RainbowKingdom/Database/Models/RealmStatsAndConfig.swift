@@ -46,13 +46,13 @@ class RealmCalendarState: Object {
 /// 英语翻译练习配置（嵌套对象）
 class RealmEnglishTranslationConfig: EmbeddedObject {
     @Persisted var questionCount: Int = 30
-    @Persisted var vocabularyWeeks: Int = 2 // 单词时间范围（周数）
+    @Persisted var vocabularyWeeks: Int = 2 // 单词时间范围（月份）
 }
 
 /// 英语填空练习配置（嵌套对象）
 class RealmEnglishFillBlankConfig: EmbeddedObject {
     @Persisted var questionCount: Int = 10
-    @Persisted var vocabularyWeeks: Int = 2 // 单词时间范围（周数）
+    @Persisted var vocabularyWeeks: Int = 1 // 单词时间范围（月份）
 }
 
 /// 加减法练习配置（嵌套对象）

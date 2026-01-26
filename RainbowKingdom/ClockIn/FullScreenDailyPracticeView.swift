@@ -88,6 +88,10 @@ struct FullScreenDailyPracticeView: View {
             DayDetailView(selectedDate: date)
                 .environmentObject(clockInManager)
         }
+        .onAppear {
+            // 当视图出现时，重新加载打卡记录以确保日历显示最新数据
+            clockInManager.loadFromRealm()
+        }
     }
     
     // 打卡日历视图
@@ -211,12 +215,13 @@ struct FullScreenDailyPracticeView: View {
         let isFuture = date > calendar.startOfDay(for: Date())
         let isCurrentMonth = dateMonth == currentMonth
         
-        // 只有过去的日期才检查打卡情况
-        let hasEnglishCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "英语翻译") : false
-        let hasEnglishFillBlankCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "英语填空") : false
+        // 过去的日期和今天都检查打卡情况
+        let shouldCheckIn = isPast || isToday
+        let hasEnglishCheckIn = shouldCheckIn ? clockInManager.hasCheckedInOnDate(date, subject: "英语翻译") : false
+        let hasEnglishFillBlankCheckIn = shouldCheckIn ? clockInManager.hasCheckedInOnDate(date, subject: "英语填空") : false
         // 同时检查"加减法"和"数学"（兼容旧记录）
-        let hasMathCheckIn = isPast ? (clockInManager.hasCheckedInOnDate(date, subject: "加减法") || clockInManager.hasCheckedInOnDate(date, subject: "数学")) : false
-        let hasMultiplicationCheckIn = isPast ? clockInManager.hasCheckedInOnDate(date, subject: "乘法") : false
+        let hasMathCheckIn = shouldCheckIn ? (clockInManager.hasCheckedInOnDate(date, subject: "加减法") || clockInManager.hasCheckedInOnDate(date, subject: "数学")) : false
+        let hasMultiplicationCheckIn = shouldCheckIn ? clockInManager.hasCheckedInOnDate(date, subject: "乘法") : false
         let hasAnyCheckIn = hasEnglishCheckIn || hasEnglishFillBlankCheckIn || hasMathCheckIn || hasMultiplicationCheckIn
         
         return Button(action: {
@@ -231,7 +236,7 @@ struct FullScreenDailyPracticeView: View {
                     )
                 
                 // 打卡状态指示器 - 显示4个点（2x2布局）
-                if isPast {
+                if isPast || isToday {
                     VStack(spacing: 1.5) {
                         HStack(spacing: 1.5) {
                             Circle()
@@ -450,7 +455,7 @@ struct FullScreenDailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("\(configManager.config.englishTranslation.questionCount)个选择题，考察最近\(configManager.config.englishTranslation.vocabularyWeeks)周的单词和短语")
+                            Text("\(configManager.config.englishTranslation.questionCount)个选择题，考察最近\(configManager.config.englishTranslation.vocabularyWeeks)个月的单词和短语")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
@@ -486,7 +491,7 @@ struct FullScreenDailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("\(configManager.config.englishFillBlank.questionCount)个填空题，考察最近\(configManager.config.englishFillBlank.vocabularyWeeks)周的单词")
+                            Text("\(configManager.config.englishFillBlank.questionCount)个填空题，考察最近\(configManager.config.englishFillBlank.vocabularyWeeks)个月的单词")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }

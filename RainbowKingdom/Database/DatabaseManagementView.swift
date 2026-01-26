@@ -414,6 +414,7 @@ struct DatabaseManagementView: View {
 
 struct SearchBar: View {
     @Binding var text: String
+    @FocusState private var isFocused: Bool
     
     var body: some View {
         HStack {
@@ -422,6 +423,7 @@ struct SearchBar: View {
             
             TextField("搜索...", text: $text)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
+                .focused($isFocused)
             
             if !text.isEmpty {
                 Button(action: { text = "" }) {
@@ -429,6 +431,10 @@ struct SearchBar: View {
                         .foregroundColor(.secondary)
                 }
             }
+        }
+        .onDisappear {
+            // 当视图消失时，清除TextField的焦点，避免警告
+            isFocused = false
         }
     }
 }

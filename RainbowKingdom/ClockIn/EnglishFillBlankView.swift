@@ -11,6 +11,7 @@ struct EnglishFillBlankView: View {
     @EnvironmentObject var clockInManager: ClockInManager
     @EnvironmentObject var vocabularyManager: VocabularyManager
     @Environment(\.presentationMode) var presentationMode
+    @StateObject private var configManager = PracticeConfigManager()
     
     @State private var currentQuestionIndex = 0
     @State private var userInputs: [[String]] = [] // 每题的用户输入字符数组
@@ -28,7 +29,9 @@ struct EnglishFillBlankView: View {
     @State private var answeredCorrectly: Set<Int> = [] // 首次答对的题目
     @State private var initiallyWrong: Set<Int> = [] // 首次答错的题目
     
-    private let questionCount = 10
+    private var questionCount: Int {
+        max(1, configManager.config.englishFillBlank.questionCount)
+    }
     
     var body: some View {
         NavigationView {
@@ -597,9 +600,8 @@ struct EnglishFillBlankView: View {
     }
     
     private func startQuiz() {
-        vocabularyManager.reloadFromCSV()
-        
-        let recentVocabularies = getRecentVocabularies()
+        let months = max(1, configManager.config.englishFillBlank.vocabularyWeeks)
+        let recentVocabularies = getRecentVocabularies(recentMonths: months, questionCount: questionCount)
         
         questions = generateQuestions(from: recentVocabularies)
         
@@ -614,32 +616,32 @@ struct EnglishFillBlankView: View {
         quizStartTime = Date()
     }
     
-    private func getRecentVocabularies() -> [Vocabulary] {
+    private func getRecentVocabularies(recentMonths: Int, questionCount: Int) -> [Vocabulary] {
         let calendar = Calendar.current
         let today = Date()
         
-        let twoWeeksAgo = calendar.date(byAdding: .weekOfYear, value: -2, to: today) ?? today
-        let twoWeeksAgoStart = calendar.startOfDay(for: twoWeeksAgo)
+        let monthsAgo = calendar.date(byAdding: .month, value: -recentMonths, to: today) ?? today
+        let monthsAgoStart = calendar.startOfDay(for: monthsAgo)
         
         let todayEnd = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: today)) ?? today
         
         let recentVocabularies = vocabularyManager.vocabularies.filter { vocab in
             let vocabDate = calendar.startOfDay(for: vocab.createdDate)
-            return vocabDate >= twoWeeksAgoStart && vocabDate < todayEnd
+            return vocabDate >= monthsAgoStart && vocabDate < todayEnd
         }
         
-        if recentVocabularies.count < questionCount {
-            let allVocabularies = vocabularyManager.vocabularies
-            let remainingCount = questionCount - recentVocabularies.count
-            let additionalVocabularies = allVocabularies
-                .filter { calendar.startOfDay(for: $0.createdDate) < twoWeeksAgoStart }
-                .shuffled()
-                .prefix(remainingCount)
-            
-            return recentVocabularies + Array(additionalVocabularies)
+        if recentVocabularies.count >= questionCount {
+            return recentVocabularies
         }
         
-        return recentVocabularies
+        let recentIds = Set(recentVocabularies.map { $0.id })
+        let remainingCount = questionCount - recentVocabularies.count
+        let additionalVocabularies = vocabularyManager.vocabularies
+            .filter { !recentIds.contains($0.id) }
+            .shuffled()
+            .prefix(remainingCount)
+        
+        return recentVocabularies + Array(additionalVocabularies)
     }
     
     private func generateQuestions(from vocabularies: [Vocabulary]) -> [FillBlankQuestion] {
@@ -670,7 +672,10 @@ struct EnglishFillBlankView: View {
     
     private func createPartialWord(from word: String) -> String {
         let words = word.components(separatedBy: " ")
-        return words.map { createPartialSingleWord(from: $0) }.joined(separator: " ")
+        if words.count > 1 {
+            return maskSentenceWords(words)
+        }
+        return createPartialSingleWord(from: word)
     }
     
     private func createPartialSingleWord(from word: String) -> String {
@@ -679,19 +684,22 @@ struct EnglishFillBlankView: View {
         
         guard letterCount > 1 else { return word }
         
-        let hideCount = max(1, letterCount / 3)
+        let hideCount = max(1, (letterCount + 1) / 2)
         let visibleLetterCount = letterCount - hideCount
+        let maskPrefix = Bool.random()
         
         var displayedWord = ""
         var letterIndex = 0
         
         for char in word {
             if char.isLetter {
-                if letterIndex < visibleLetterCount {
-                    displayedWord.append(char)
+                let shouldShow: Bool
+                if maskPrefix {
+                    shouldShow = letterIndex >= hideCount
                 } else {
-                    displayedWord.append("_")
+                    shouldShow = letterIndex < visibleLetterCount
                 }
+                displayedWord.append(shouldShow ? char : "_")
                 letterIndex += 1
             } else {
                 displayedWord.append(char)
@@ -699,6 +707,33 @@ struct EnglishFillBlankView: View {
         }
         
         return displayedWord
+    }
+
+    private func maskSentenceWords(_ words: [String]) -> String {
+        guard !words.isEmpty else { return "" }
+        let maskWordCount = max(1, (words.count + 1) / 2)
+        let startMaskIndex = max(0, words.count - maskWordCount)
+        
+        let maskedWords = words.enumerated().map { index, word in
+            if index >= startMaskIndex {
+                return maskWholeWord(word)
+            }
+            return word
+        }
+        
+        return maskedWords.joined(separator: " ")
+    }
+
+    private func maskWholeWord(_ word: String) -> String {
+        var result = ""
+        for char in word {
+            if char.isLetter {
+                result.append("_")
+            } else {
+                result.append(char)
+            }
+        }
+        return result
     }
     
     private func getCurrentQuestion() -> FillBlankQuestion? {

@@ -26,13 +26,13 @@ struct PracticeConfig: Codable {
 // 英语翻译练习配置
 struct EnglishTranslationConfig: Codable {
     var questionCount: Int = 30
-    var vocabularyWeeks: Int = 2 // 单词时间范围（周数）
+    var vocabularyWeeks: Int = 2 // 单词时间范围（月份）
 }
 
 // 英语填空练习配置
 struct EnglishFillBlankConfig: Codable {
     var questionCount: Int = 10
-    var vocabularyWeeks: Int = 2 // 单词时间范围（周数）
+    var vocabularyWeeks: Int = 1 // 单词时间范围（月份）
 }
 
 // 加减法练习配置

@@ -79,17 +79,18 @@ class VocabularyManager: ObservableObject {
     private let dbManager = DatabaseManager.shared
     private let userDefaults = UserDefaults.standard
     private let selectedGroupKey = "SelectedGroup"
+    private let resetVocabularyOnLaunch = true
     
     init() {
         // 初始化默认组（如果Realm中没有）
         initializeDefaultGroups()
         
-        // 从Realm加载数据
-        loadFromRealm()
-        
-        // 如果Realm中没有数据，尝试从CSV导入
-        if vocabularies.isEmpty {
-            importFromCSVIfNeeded()
+        if resetVocabularyOnLaunch {
+            // 启动时清空词库并从CSV重新导入
+            forceResyncFromBundle()
+        } else {
+            // 仅从Realm加载数据，不从CSV读取
+            loadFromRealm()
         }
         
         // 加载用户设置
