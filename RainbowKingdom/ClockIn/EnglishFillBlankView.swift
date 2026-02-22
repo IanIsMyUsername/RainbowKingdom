@@ -208,6 +208,18 @@ struct EnglishFillBlankView: View {
                         let letterIndex = getLetterIndex(upTo: index, in: word)
                         Button(action: {
                             if !showAnswerFeedback || needsCorrection {
+                                // 如果需要订正，清除之前填写的单词
+                                if needsCorrection {
+                                    // 确保数组足够大
+                                    while userInputs.count <= currentQuestionIndex {
+                                        userInputs.append([])
+                                    }
+                                    // 清空当前题目的所有输入
+                                    userInputs[currentQuestionIndex] = []
+                                    // 重置反馈状态，允许重新输入
+                                    showAnswerFeedback = false
+                                }
+                                
                                 // 如果键盘未展开，自动定位到第一个空白位置
                                 if !showKeyboard {
                                     focusedIndex = findFirstEmptyPosition(in: word)

@@ -11,6 +11,7 @@ struct EnglishClockInView: View {
     @EnvironmentObject var clockInManager: ClockInManager
     @EnvironmentObject var vocabularyManager: VocabularyManager
     @Environment(\.presentationMode) var presentationMode
+    @StateObject private var configManager = PracticeConfigManager()
     
     @State private var currentQuestionIndex = 0
     @State private var userAnswers: [String] = []
@@ -26,7 +27,9 @@ struct EnglishClockInView: View {
     @State private var showSummary = false
     @State private var submittedQuestions: Set<Int> = [] // 跟踪已提交的题目
     
-    private let questionCount = 30
+    private var questionCount: Int {
+        max(1, configManager.config.englishTranslation.questionCount)
+    }
     
     var body: some View {
         NavigationView {
@@ -324,11 +327,11 @@ struct EnglishClockInView: View {
         vocabularyManager.reloadFromCSV()
         print("CSV文件重新加载完成，当前词汇总数: \(vocabularyManager.vocabularies.count)")
         
-        // 获取最近两周的词汇
+        // 获取最近配置时间范围内的词汇（确保不重复）
         let recentVocabularies = getRecentVocabularies()
-        print("筛选出的近两周词汇数: \(recentVocabularies.count)")
+        print("筛选出的词汇数: \(recentVocabularies.count)")
         
-        // 生成15个选择题
+        // 生成配置数量的选择题（确保单词和句子不重复）
         questions = generateQuestions(from: recentVocabularies)
         
         // 如果没有足够的词汇，显示错误
@@ -345,56 +348,115 @@ struct EnglishClockInView: View {
         quizStartTime = Date()
     }
     
-    // 获取最近两周的词汇，如果不够则从全部词汇补全
+    // 获取最近配置时间范围内的词汇，如果不够则从全部词汇补全，确保单词和句子不重复
     private func getRecentVocabularies() -> [Vocabulary] {
         let calendar = Calendar.current
         let today = Date()
         
-        // 获取两周前的开始日期（00:00:00）
-        let twoWeeksAgo = calendar.date(byAdding: .weekOfYear, value: -2, to: today) ?? today
-        let twoWeeksAgoStart = calendar.startOfDay(for: twoWeeksAgo)
+        // 使用配置中的 vocabularyWeeks（月份）
+        let monthsAgo = configManager.config.englishTranslation.vocabularyWeeks
+        let monthsAgoDate = calendar.date(byAdding: .month, value: -monthsAgo, to: today) ?? today
+        let monthsAgoStart = calendar.startOfDay(for: monthsAgoDate)
         
         // 获取今天的结束日期（23:59:59）
         let todayEnd = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: today)) ?? today
         
-        // 筛选最近两周的词汇（包括今天）
+        // 筛选最近配置时间范围内的词汇（包括今天）
         let recentVocabularies = vocabularyManager.vocabularies.filter { vocab in
             let vocabDate = calendar.startOfDay(for: vocab.createdDate)
-            let isInRange = vocabDate >= twoWeeksAgoStart && vocabDate < todayEnd
-            if isInRange {
-                print("选中词汇: \(vocab.english), 日期: \(vocab.createdDate)")
+            return vocabDate >= monthsAgoStart && vocabDate < todayEnd
+        }
+        
+        // 使用 Set 来跟踪已选择的词汇，确保不重复
+        var selectedVocabularies: [Vocabulary] = []
+        var selectedIds = Set<UUID>()
+        
+        // 先添加日期范围内的词汇（不重复）
+        for vocab in recentVocabularies {
+            if !selectedIds.contains(vocab.id) {
+                selectedVocabularies.append(vocab)
+                selectedIds.insert(vocab.id)
             }
-            return isInRange
         }
         
-        
-        // 如果近两周的词汇不够15个，从全部词汇中补全
-        if recentVocabularies.count < questionCount {
+        // 如果日期范围内的词汇不够，从全部词汇中随机补充（排除已选择的）
+        if selectedVocabularies.count < questionCount {
+            let remainingCount = questionCount - selectedVocabularies.count
             let allVocabularies = vocabularyManager.vocabularies
-            let remainingCount = questionCount - recentVocabularies.count
-            let additionalVocabularies = allVocabularies
-                .filter { calendar.startOfDay(for: $0.createdDate) < twoWeeksAgoStart }
+                .filter { !selectedIds.contains($0.id) }
                 .shuffled()
-                .prefix(remainingCount)
             
-            
-            return recentVocabularies + Array(additionalVocabularies)
+            let additionalVocabularies = Array(allVocabularies.prefix(remainingCount))
+            selectedVocabularies.append(contentsOf: additionalVocabularies)
         }
         
-        return recentVocabularies
+        return selectedVocabularies
     }
     
-    // 生成题目
+    // 生成题目，确保单词和句子不重复
     private func generateQuestions(from vocabularies: [Vocabulary]) -> [QuizQuestion] {
         var questions: [QuizQuestion] = []
         
         // 如果词汇列表为空，返回空数组
         guard !vocabularies.isEmpty else { return questions }
         
-        let shuffledVocabularies = vocabularies.shuffled()
+        // 分离单词和句子
+        let words = vocabularies.filter { $0.type == .word }
+        let phrases = vocabularies.filter { $0.type == .phrase }
         
-        for i in 0..<min(questionCount, shuffledVocabularies.count) {
-            let vocabulary = shuffledVocabularies[i]
+        // 使用 Set 来跟踪已使用的词汇，确保不重复
+        var usedIds = Set<UUID>()
+        var selectedVocabularies: [Vocabulary] = []
+        
+        // 先随机选择单词和句子，确保不重复
+        let shuffledWords = words.shuffled()
+        let shuffledPhrases = phrases.shuffled()
+        
+        // 交替选择单词和句子，或者根据数量比例选择
+        var wordIndex = 0
+        var phraseIndex = 0
+        
+        while selectedVocabularies.count < questionCount && (wordIndex < shuffledWords.count || phraseIndex < shuffledPhrases.count) {
+            // 优先选择单词和句子，确保都有代表
+            if wordIndex < shuffledWords.count {
+                let word = shuffledWords[wordIndex]
+                if !usedIds.contains(word.id) {
+                    selectedVocabularies.append(word)
+                    usedIds.insert(word.id)
+                }
+                wordIndex += 1
+            }
+            
+            if selectedVocabularies.count >= questionCount { break }
+            
+            if phraseIndex < shuffledPhrases.count {
+                let phrase = shuffledPhrases[phraseIndex]
+                if !usedIds.contains(phrase.id) {
+                    selectedVocabularies.append(phrase)
+                    usedIds.insert(phrase.id)
+                }
+                phraseIndex += 1
+            }
+            
+            if selectedVocabularies.count >= questionCount { break }
+        }
+        
+        // 如果单词和句子都不够，从剩余的词汇中补充（确保不重复）
+        if selectedVocabularies.count < questionCount {
+            let remainingCount = questionCount - selectedVocabularies.count
+            let remainingVocabularies = vocabularies
+                .filter { !usedIds.contains($0.id) }
+                .shuffled()
+            
+            let additionalVocabularies = Array(remainingVocabularies.prefix(remainingCount))
+            selectedVocabularies.append(contentsOf: additionalVocabularies)
+        }
+        
+        // 打乱顺序
+        selectedVocabularies = selectedVocabularies.shuffled()
+        
+        // 生成题目
+        for vocabulary in selectedVocabularies.prefix(questionCount) {
             let isEnglishToChinese = Bool.random()
             
             let question: String

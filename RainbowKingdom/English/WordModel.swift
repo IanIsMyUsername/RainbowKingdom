@@ -342,8 +342,20 @@ class VocabularyManager: ObservableObject {
     // 手动重新加载CSV文件（用于开发调试）
     func reloadFromCSV() {
         print("手动重新加载CSV文件...")
-        importFromCSV()
-        loadFromRealm()
+        
+        do {
+            // 先删除所有词汇，避免重复累积
+            try dbManager.deleteAll(RealmVocabulary.self)
+            print("已清空数据库中的词汇")
+            
+            // 重新导入
+            importFromCSV()
+            loadFromRealm()
+            
+            print("重新加载完成，当前词汇数量: \(vocabularies.count)")
+        } catch {
+            print("重新加载CSV文件失败: \(error)")
+        }
     }
     
     // 手动同步Bundle中的CSV到Documents（供外部调用）
@@ -424,6 +436,8 @@ class VocabularyManager: ObservableObject {
             let lines = csvContent.components(separatedBy: .newlines)
             
             var newVocabularies: [Vocabulary] = []
+            // 使用 Set 来跟踪已添加的词汇（基于英文+中文），确保不重复
+            var addedVocabularies = Set<String>()
             
             for line in lines {
                 let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -446,14 +460,21 @@ class VocabularyManager: ObservableObject {
                     }
                     
                     if !english.isEmpty && !chinese.isEmpty && !group.isEmpty {
-                        let vocabulary = Vocabulary(english: english, chinese: chinese, group: group, type: type, createdDate: createdDate)
-                        newVocabularies.append(vocabulary)
+                        // 使用英文+中文作为唯一标识，确保不重复
+                        let vocabularyKey = "\(english.lowercased())|\(chinese)"
+                        if !addedVocabularies.contains(vocabularyKey) {
+                            let vocabulary = Vocabulary(english: english, chinese: chinese, group: group, type: type, createdDate: createdDate)
+                            newVocabularies.append(vocabulary)
+                            addedVocabularies.insert(vocabularyKey)
+                        } else {
+                            print("跳过重复词汇: \(english) - \(chinese)")
+                        }
                     }
                 }
             }
             
             vocabularies = newVocabularies
-            print("从CSV加载了 \(vocabularies.count) 个词汇")
+            print("从CSV加载了 \(vocabularies.count) 个词汇（已去重）")
             
         } catch {
             print("读取CSV文件失败: \(error)")
