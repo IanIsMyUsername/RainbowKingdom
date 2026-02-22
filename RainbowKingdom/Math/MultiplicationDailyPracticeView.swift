@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MultiplicationDailyPracticeView: View {
+    let targetDate: Date? // 补打卡的目标日期，nil表示正常打卡（使用今天）
     @StateObject private var quizManager = MultiplicationQuizManager()
     @EnvironmentObject var clockInManager: ClockInManager
     @Environment(\.presentationMode) var presentationMode
@@ -21,6 +22,10 @@ struct MultiplicationDailyPracticeView: View {
     @State private var isAnswerCorrect = false
     @State private var correctAnswer = ""
     @State private var submittedQuestions: Set<Int> = [] // 跟踪已提交的题目
+    
+    init(targetDate: Date? = nil) {
+        self.targetDate = targetDate
+    }
     
     var body: some View {
         NavigationView {
@@ -460,13 +465,16 @@ struct MultiplicationDailyPracticeView: View {
             // 将乘法题目转换为QuizQuestion格式
             let quizQuestions = convertMultiplicationQuestionsToQuizQuestions(result.questions)
             
+            // 确定记录的日期：如果提供了targetDate（补打卡），使用targetDate；否则使用result.completedDate
+            let recordDate = targetDate ?? result.completedDate
+            
             let record = ClockInRecord(
-                date: result.completedDate,
+                date: recordDate,
                 subject: "乘法",
                 score: result.score,
                 totalQuestions: result.totalQuestions,
                 timeSpent: result.timeSpent,
-                completedDate: result.completedDate,
+                completedDate: result.completedDate, // completedDate始终使用实际完成时间
                 questions: quizQuestions,
                 userAnswers: result.userAnswers
             )

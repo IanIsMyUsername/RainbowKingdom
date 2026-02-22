@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct EnglishFillBlankView: View {
+    let targetDate: Date? // 补打卡的目标日期，nil表示正常打卡（使用今天）
     @EnvironmentObject var clockInManager: ClockInManager
     @EnvironmentObject var vocabularyManager: VocabularyManager
     @Environment(\.presentationMode) var presentationMode
@@ -28,6 +29,10 @@ struct EnglishFillBlankView: View {
     @State private var needsCorrection = false
     @State private var answeredCorrectly: Set<Int> = [] // 首次答对的题目
     @State private var initiallyWrong: Set<Int> = [] // 首次答错的题目
+    
+    init(targetDate: Date? = nil) {
+        self.targetDate = targetDate
+    }
     
     private var questionCount: Int {
         max(1, configManager.config.englishFillBlank.questionCount)
@@ -798,13 +803,16 @@ struct EnglishFillBlankView: View {
         
         let userAnswersStrings = userInputs.map { $0.joined() }
         
+        // 确定记录的日期：如果提供了targetDate（补打卡），使用targetDate；否则使用今天
+        let recordDate = targetDate ?? Date()
+        
         let record = ClockInRecord(
-            date: Date(),
+            date: recordDate,
             subject: "英语填空",
             score: score,
             totalQuestions: questions.count,
             timeSpent: timeSpent,
-            completedDate: Date(),
+            completedDate: Date(), // completedDate始终使用当前时间
             questions: quizQuestions,
             userAnswers: userAnswersStrings
         )

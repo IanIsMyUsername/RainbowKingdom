@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct EnglishClockInView: View {
+    let targetDate: Date? // 补打卡的目标日期，nil表示正常打卡（使用今天）
     @EnvironmentObject var clockInManager: ClockInManager
     @EnvironmentObject var vocabularyManager: VocabularyManager
     @Environment(\.presentationMode) var presentationMode
@@ -26,6 +27,10 @@ struct EnglishClockInView: View {
     @State private var correctAnswer = ""
     @State private var showSummary = false
     @State private var submittedQuestions: Set<Int> = [] // 跟踪已提交的题目
+    
+    init(targetDate: Date? = nil) {
+        self.targetDate = targetDate
+    }
     
     private var questionCount: Int {
         max(1, configManager.config.englishTranslation.questionCount)
@@ -596,14 +601,17 @@ struct EnglishClockInView: View {
         let score = calculateScore()
         let timeSpent = quizStartTime?.timeIntervalSinceNow.magnitude ?? 0
         
+        // 确定记录的日期：如果提供了targetDate（补打卡），使用targetDate；否则使用今天
+        let recordDate = targetDate ?? Date()
+        
         // 创建打卡记录
         let record = ClockInRecord(
-            date: Date(),
+            date: recordDate,
             subject: "英语翻译",
             score: score,
             totalQuestions: questions.count,
             timeSpent: timeSpent,
-            completedDate: Date(),
+            completedDate: Date(), // completedDate始终使用当前时间
             questions: questions,
             userAnswers: userAnswers
         )

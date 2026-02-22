@@ -607,6 +607,15 @@ struct DayDetailView: View {
     @EnvironmentObject var clockInManager: ClockInManager
     @Environment(\.presentationMode) var presentationMode
     @State private var selectedRecord: ClockInRecord?
+    @StateObject private var vocabularyManager = VocabularyManager()
+    @StateObject private var configManager = PracticeConfigManager()
+    
+    // 补打卡相关状态
+    @State private var showingMakeupPractice = false
+    @State private var showingMakeupEnglishPractice = false
+    @State private var showingMakeupEnglishFillBlank = false
+    @State private var showingMakeupMathPractice = false
+    @State private var showingMakeupMultiplicationPractice = false
     
     var body: some View {
         NavigationView {
@@ -620,6 +629,11 @@ struct DayDetailView: View {
                         emptyStateView
                     } else {
                         recordsList
+                    }
+                    
+                    // 补打卡区域
+                    if canMakeupCheckIn {
+                        makeupCheckInSection
                     }
                 }
                 .padding()
@@ -637,6 +651,39 @@ struct DayDetailView: View {
         .sheet(item: $selectedRecord) { record in
             ClockInDetailView(record: record)
                 .environmentObject(clockInManager)
+        }
+        .sheet(isPresented: $showingMakeupPractice) {
+            makeupPracticeSelectionView
+        }
+        .fullScreenCover(isPresented: $showingMakeupEnglishPractice) {
+            EnglishClockInView(targetDate: selectedDate)
+                .environmentObject(clockInManager)
+                .environmentObject(vocabularyManager)
+                .onDisappear {
+                    clockInManager.loadFromRealm()
+                }
+        }
+        .fullScreenCover(isPresented: $showingMakeupEnglishFillBlank) {
+            EnglishFillBlankView(targetDate: selectedDate)
+                .environmentObject(clockInManager)
+                .environmentObject(vocabularyManager)
+                .onDisappear {
+                    clockInManager.loadFromRealm()
+                }
+        }
+        .fullScreenCover(isPresented: $showingMakeupMathPractice) {
+            MathDailyPracticeView(targetDate: selectedDate)
+                .environmentObject(clockInManager)
+                .onDisappear {
+                    clockInManager.loadFromRealm()
+                }
+        }
+        .fullScreenCover(isPresented: $showingMakeupMultiplicationPractice) {
+            MultiplicationDailyPracticeView(targetDate: selectedDate)
+                .environmentObject(clockInManager)
+                .onDisappear {
+                    clockInManager.loadFromRealm()
+                }
         }
     }
     
@@ -676,6 +723,32 @@ struct DayDetailView: View {
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
+            
+            // 补打卡按钮
+            if canMakeupCheckIn {
+                Button(action: {
+                    showingMakeupPractice = true
+                }) {
+                    HStack {
+                        Image(systemName: "clock.badge.plus")
+                            .font(.title3)
+                        Text("补打卡")
+                            .font(.headline)
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.orange, .red]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(12)
+                    .shadow(color: .orange.opacity(0.3), radius: 5, x: 0, y: 3)
+                }
+                .padding(.top, 10)
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -716,6 +789,221 @@ struct DayDetailView: View {
         formatter.dateFormat = "EEEE"
         formatter.locale = Locale(identifier: "zh_CN")
         return formatter.string(from: date)
+    }
+    
+    // 检查是否可以补打卡（只能补过去的日期）
+    private var canMakeupCheckIn: Bool {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let targetDate = calendar.startOfDay(for: selectedDate)
+        return targetDate <= today
+    }
+    
+    // 获取未打卡的科目列表
+    private var missingSubjects: [String] {
+        let allSubjects = ["英语翻译", "英语填空", "加减法", "乘法"]
+        let checkedInSubjects = Set(dayRecords.map { $0.subject })
+        return allSubjects.filter { !checkedInSubjects.contains($0) }
+    }
+    
+    // 检查是否所有科目都已打卡
+    private var hasAllSubjectsCheckedIn: Bool {
+        return missingSubjects.isEmpty
+    }
+    
+    // 补打卡区域
+    private var makeupCheckInSection: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            Text("补打卡")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+            
+            if hasAllSubjectsCheckedIn {
+                Text("该日期所有科目已完成打卡")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            } else {
+                VStack(spacing: 12) {
+                    ForEach(missingSubjects, id: \.self) { subject in
+                        makeupSubjectButton(subject: subject)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 15)
+                .fill(Color(.systemBackground))
+                .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
+        )
+    }
+    
+    // 补打卡科目按钮
+    private func makeupSubjectButton(subject: String) -> some View {
+        Button(action: {
+            switch subject {
+            case "英语翻译":
+                showingMakeupEnglishPractice = true
+            case "英语填空":
+                showingMakeupEnglishFillBlank = true
+            case "加减法":
+                showingMakeupMathPractice = true
+            case "乘法":
+                showingMakeupMultiplicationPractice = true
+            default:
+                break
+            }
+        }) {
+            HStack {
+                Image(systemName: iconForSubject(subject))
+                    .font(.title3)
+                    .foregroundColor(.white)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(subject)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Text("补打卡")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.9))
+                }
+                
+                Spacer()
+                
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.title3)
+                    .foregroundColor(.white)
+            }
+            .padding()
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: gradientColorsForSubject(subject)),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(12)
+        }
+    }
+    
+    // 获取科目的图标
+    private func iconForSubject(_ subject: String) -> String {
+        switch subject {
+        case "英语翻译":
+            return "book.fill"
+        case "英语填空":
+            return "pencil.and.outline"
+        case "加减法":
+            return "plus.forwardslash.minus"
+        case "乘法":
+            return "multiply.circle.fill"
+        default:
+            return "questionmark.circle.fill"
+        }
+    }
+    
+    // 获取科目的渐变色
+    private func gradientColorsForSubject(_ subject: String) -> [Color] {
+        switch subject {
+        case "英语翻译":
+            return [.blue, .purple]
+        case "英语填空":
+            return [.purple, .pink]
+        case "加减法":
+            return [.green, Color(red: 0.0, green: 0.8, blue: 0.6)]
+        case "乘法":
+            return [.orange, .red]
+        default:
+            return [.gray, .gray]
+        }
+    }
+    
+    // 补打卡选择界面
+    private var makeupPracticeSelectionView: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                Text("选择要补打卡的科目")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                    .padding(.top, 20)
+                
+                VStack(spacing: 12) {
+                    makeupSubjectButtonForSelection(subject: "英语翻译")
+                    makeupSubjectButtonForSelection(subject: "英语填空")
+                    makeupSubjectButtonForSelection(subject: "加减法")
+                    makeupSubjectButtonForSelection(subject: "乘法")
+                }
+                .padding()
+                
+                Spacer()
+            }
+            .navigationTitle("补打卡")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("取消") {
+                        showingMakeupPractice = false
+                    }
+                }
+            }
+        }
+    }
+    
+    // 补打卡选择界面的科目按钮（先关闭sheet，再打开练习）
+    private func makeupSubjectButtonForSelection(subject: String) -> some View {
+        Button(action: {
+            // 先关闭选择界面
+            showingMakeupPractice = false
+            // 然后打开对应的练习视图
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                switch subject {
+                case "英语翻译":
+                    showingMakeupEnglishPractice = true
+                case "英语填空":
+                    showingMakeupEnglishFillBlank = true
+                case "加减法":
+                    showingMakeupMathPractice = true
+                case "乘法":
+                    showingMakeupMultiplicationPractice = true
+                default:
+                    break
+                }
+            }
+        }) {
+            HStack {
+                Image(systemName: iconForSubject(subject))
+                    .font(.title3)
+                    .foregroundColor(.white)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(subject)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Text("补打卡")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.9))
+                }
+                
+                Spacer()
+                
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.title3)
+                    .foregroundColor(.white)
+            }
+            .padding()
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: gradientColorsForSubject(subject)),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(12)
+        }
     }
 }
 
