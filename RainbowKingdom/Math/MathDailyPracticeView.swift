@@ -10,9 +10,10 @@ import SwiftUI
 struct MathDailyPracticeView: View {
     let targetDate: Date? // 补打卡的目标日期，nil表示正常打卡（使用今天）
     @StateObject private var quizManager = MathQuizManager()
+    @StateObject private var configManager = PracticeConfigManager()
     @EnvironmentObject var clockInManager: ClockInManager
     @Environment(\.presentationMode) var presentationMode
-    
+
     @State private var selectedAnswer = ""
     @State private var showingResult = false
     @State private var showingAlert = false
@@ -22,7 +23,12 @@ struct MathDailyPracticeView: View {
     @State private var isAnswerCorrect = false
     @State private var correctAnswer = ""
     @State private var submittedQuestions: Set<Int> = [] // 跟踪已提交的题目
-    
+
+    // 从配置中获取数字范围
+    private var maxNumber: Int {
+        configManager.config.additionSubtraction.maxNumber
+    }
+
     init(targetDate: Date? = nil) {
         self.targetDate = targetDate
     }
@@ -72,18 +78,18 @@ struct MathDailyPracticeView: View {
                 .font(.system(size: 34, weight: .bold))
                 .foregroundColor(.blue)
             
-            Text("10道加减法题目，70以内连续加减2个数")
+            Text("\(configManager.config.additionSubtraction.questionCount)道加减法题目，\(maxNumber)以内连续加减2个数")
                 .font(.title2)
                 .foregroundColor(.gray)
-            
+
             VStack(spacing: 15) {
                 Text("练习规则")
                     .font(.headline)
                     .foregroundColor(.primary)
-                
+
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("• 共10道题目")
-                    Text("• 数字范围：70以内")
+                    Text("• 共\(configManager.config.additionSubtraction.questionCount)道题目")
+                    Text("• 数字范围：\(maxNumber)以内")
                     Text("• 包含加法和减法")
                     Text("• 完成后自动打卡")
                 }
@@ -406,7 +412,10 @@ struct MathDailyPracticeView: View {
     
     // MARK: - 辅助方法
     private func startQuiz() {
-        quizManager.startQuiz(operationType: .mixed, questionCount: 10)
+        // 从配置读取题目数量和数字范围
+        let questionCount = configManager.config.additionSubtraction.questionCount
+        let maxNum = configManager.config.additionSubtraction.maxNumber
+        quizManager.startQuiz(operationType: .mixed, questionCount: questionCount, maxNumber: maxNum)
         selectedAnswer = ""
         showAnswerFeedback = false
         isAnswerCorrect = false

@@ -32,14 +32,15 @@ class DatabaseManager {
             config.fileURL = realmPath
             
             // 设置schema版本（用于未来迁移）
-            config.schemaVersion = 1
-            
+            config.schemaVersion = 2
+
             // 设置迁移块（未来需要时可以添加）
             config.migrationBlock = { migration, oldSchemaVersion in
                 // 如果需要迁移，在这里处理
                 if oldSchemaVersion < 1 {
                     // 迁移逻辑
                 }
+                // v2: 各练习配置新增 isEnabled，默认 true，由 @Persisted 默认值自动应用
             }
             
             // 初始化Realm实例

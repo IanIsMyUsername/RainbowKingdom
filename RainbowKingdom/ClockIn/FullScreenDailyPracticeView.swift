@@ -308,119 +308,138 @@ struct FullScreenDailyPracticeView: View {
             
             VStack(spacing: 10) {
                 // 英语翻译打卡状态
-                HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "英语翻译") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
-                        .font(.body)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("英语翻译")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                if configManager.config.englishTranslation.isEnabled {
+                    HStack {
+                        Image(systemName: clockInManager.hasCheckedInToday(subject: "英语翻译") ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
-                        
-                        if let englishRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语翻译") {
-                            Text("\(englishRecord.score)/\(englishRecord.totalQuestions) · 已完成")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("用时: \(formatDuration(englishRecord.timeSpent))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("未完成")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            .font(.body)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("英语翻译")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
+
+                            if let englishRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语翻译") {
+                                Text("\(englishRecord.score)/\(englishRecord.totalQuestions) · 已完成")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("用时: \(formatDuration(englishRecord.timeSpent))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("未完成")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
+
+                        Spacer()
                     }
-                    
-                    Spacer()
                 }
-                
+
                 // 英语填空打卡状态
-                HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "英语填空") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
-                        .font(.body)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("英语填空")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                if configManager.config.englishFillBlank.isEnabled {
+                    HStack {
+                        Image(systemName: clockInManager.hasCheckedInToday(subject: "英语填空") ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
-                        
-                        if let fillBlankRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语填空") {
-                            Text("\(fillBlankRecord.score)/\(fillBlankRecord.totalQuestions) · 已完成")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("用时: \(formatDuration(fillBlankRecord.timeSpent))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("未完成")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            .font(.body)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("英语填空")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
+
+                            if let fillBlankRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语填空") {
+                                Text("\(fillBlankRecord.score)/\(fillBlankRecord.totalQuestions) · 已完成")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("用时: \(formatDuration(fillBlankRecord.timeSpent))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("未完成")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
+
+                        Spacer()
                     }
-                    
-                    Spacer()
                 }
-                
+
                 // 加减法打卡状态
-                HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "加减法") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
-                        .font(.body)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("加减法练习")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                if configManager.config.additionSubtraction.isEnabled {
+                    HStack {
+                        Image(systemName: clockInManager.hasCheckedInToday(subject: "加减法") ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
-                        
-                        if let mathRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "加减法") {
-                            Text("\(mathRecord.score)/\(mathRecord.totalQuestions) · 已完成")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("用时: \(formatDuration(mathRecord.timeSpent))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("未完成")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            .font(.body)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("加减法练习")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
+
+                            if let mathRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "加减法") {
+                                Text("\(mathRecord.score)/\(mathRecord.totalQuestions) · 已完成")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("用时: \(formatDuration(mathRecord.timeSpent))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("未完成")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
+
+                        Spacer()
                     }
-                    
-                    Spacer()
                 }
-                
+
                 // 乘法打卡状态
-                HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "乘法") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
-                        .font(.body)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("乘法练习")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                if configManager.config.multiplication.isEnabled {
+                    HStack {
+                        Image(systemName: clockInManager.hasCheckedInToday(subject: "乘法") ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
-                        
-                        if let multiplicationRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "乘法") {
-                            Text("\(multiplicationRecord.score)/\(multiplicationRecord.totalQuestions) · 已完成")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text("用时: \(formatDuration(multiplicationRecord.timeSpent))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("未完成")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            .font(.body)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("乘法练习")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
+
+                            if let multiplicationRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "乘法") {
+                                Text("\(multiplicationRecord.score)/\(multiplicationRecord.totalQuestions) · 已完成")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("用时: \(formatDuration(multiplicationRecord.timeSpent))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("未完成")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
+
+                        Spacer()
                     }
-                    
-                    Spacer()
+                }
+
+                if !configManager.config.englishTranslation.isEnabled
+                    && !configManager.config.englishFillBlank.isEnabled
+                    && !configManager.config.additionSubtraction.isEnabled
+                    && !configManager.config.multiplication.isEnabled {
+                    Text("今日无启用的练习项目")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 8)
                 }
             }
         }
@@ -441,148 +460,167 @@ struct FullScreenDailyPracticeView: View {
                 .foregroundColor(.primary)
             
             VStack(spacing: 12) {
-                // 英语练习按钮
-                Button(action: {
-                    showingEnglishPractice = true
-                }) {
-                    HStack {
-                        Image(systemName: "book.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                        
-                        VStack(alignment: .leading) {
-                            Text("英语翻译练习")
-                                .font(.headline)
+                if configManager.config.englishTranslation.isEnabled {
+                    // 英语练习按钮
+                    Button(action: {
+                        showingEnglishPractice = true
+                    }) {
+                        HStack {
+                            Image(systemName: "book.fill")
+                                .font(.title2)
                                 .foregroundColor(.white)
-                            
-                            Text("\(configManager.config.englishTranslation.questionCount)个选择题，考察最近\(configManager.config.englishTranslation.vocabularyWeeks)个月的单词和短语")
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.9))
+
+                            VStack(alignment: .leading) {
+                                Text("英语翻译练习")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+
+                                Text("\(configManager.config.englishTranslation.questionCount)个选择题，考察最近\(configManager.config.englishTranslation.vocabularyWeeks)个月的单词和短语")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.9))
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.white)
                         }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "arrow.right.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                    }
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.blue, .purple]),
-                            startPoint: .leading,
-                            endPoint: .trailing
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.blue, .purple]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .cornerRadius(12)
+                        .cornerRadius(12)
+                    }
                 }
-                
-                // 英语填空练习按钮
-                Button(action: {
-                    showingEnglishFillBlank = true
-                }) {
-                    HStack {
-                        Image(systemName: "pencil.and.outline")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                        
-                        VStack(alignment: .leading) {
-                            Text("英语填空练习")
-                                .font(.headline)
+
+                if configManager.config.englishFillBlank.isEnabled {
+                    // 英语填空练习按钮
+                    Button(action: {
+                        showingEnglishFillBlank = true
+                    }) {
+                        HStack {
+                            Image(systemName: "pencil.and.outline")
+                                .font(.title2)
                                 .foregroundColor(.white)
-                            
-                            Text("\(configManager.config.englishFillBlank.questionCount)个填空题，考察最近\(configManager.config.englishFillBlank.vocabularyWeeks)个月的单词")
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.9))
+
+                            VStack(alignment: .leading) {
+                                Text("英语填空练习")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+
+                                Text("\(configManager.config.englishFillBlank.questionCount)个填空题，考察最近\(configManager.config.englishFillBlank.vocabularyWeeks)个月的单词")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.9))
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.white)
                         }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "arrow.right.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                    }
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.purple, .pink]),
-                            startPoint: .leading,
-                            endPoint: .trailing
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.purple, .pink]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .cornerRadius(12)
+                        .cornerRadius(12)
+                    }
                 }
-                
-                // 加减法练习按钮
-                Button(action: {
-                    showingMathPractice = true
-                }) {
-                    HStack {
-                        Image(systemName: "plus.forwardslash.minus")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                        
-                        VStack(alignment: .leading) {
-                            Text("加减法练习")
-                                .font(.headline)
+
+                if configManager.config.additionSubtraction.isEnabled {
+                    // 加减法练习按钮
+                    Button(action: {
+                        showingMathPractice = true
+                    }) {
+                        HStack {
+                            Image(systemName: "plus.forwardslash.minus")
+                                .font(.title2)
                                 .foregroundColor(.white)
-                            
-                            Text("\(configManager.config.additionSubtraction.questionCount)道加减法题目，\(configManager.config.additionSubtraction.maxNumber)以内连续加减2个数")
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.9))
+
+                            VStack(alignment: .leading) {
+                                Text("加减法练习")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+
+                                Text("\(configManager.config.additionSubtraction.questionCount)道加减法题目，\(configManager.config.additionSubtraction.maxNumber)以内连续加减2个数")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.9))
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.white)
                         }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "arrow.right.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                    }
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.green, Color(red: 0.0, green: 0.8, blue: 0.6)]),
-                            startPoint: .leading,
-                            endPoint: .trailing
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.green, Color(red: 0.0, green: 0.8, blue: 0.6)]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .cornerRadius(12)
+                        .cornerRadius(12)
+                    }
                 }
-                
-                // 乘法练习按钮
-                Button(action: {
-                    showingMultiplicationPractice = true
-                }) {
-                    HStack {
-                        Image(systemName: "multiply.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                        
-                        VStack(alignment: .leading) {
-                            Text("乘法练习")
-                                .font(.headline)
+
+                if configManager.config.multiplication.isEnabled {
+                    // 乘法练习按钮
+                    Button(action: {
+                        showingMultiplicationPractice = true
+                    }) {
+                        HStack {
+                            Image(systemName: "multiply.circle.fill")
+                                .font(.title2)
                                 .foregroundColor(.white)
-                            
-                            Text("\(configManager.config.multiplication.questionCount)道乘法题目，数字范围：1到\(configManager.config.multiplication.maxNumber - 1)")
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.9))
+
+                            VStack(alignment: .leading) {
+                                Text("乘法练习")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+
+                                Text("\(configManager.config.multiplication.questionCount)道乘法题目，数字范围：1到\(configManager.config.multiplication.maxNumber - 1)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.9))
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.white)
                         }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "arrow.right.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                    }
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.orange, .red]),
-                            startPoint: .leading,
-                            endPoint: .trailing
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.orange, .red]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .cornerRadius(12)
+                        .cornerRadius(12)
+                    }
+                }
+
+                if !configManager.config.englishTranslation.isEnabled
+                    && !configManager.config.englishFillBlank.isEnabled
+                    && !configManager.config.additionSubtraction.isEnabled
+                    && !configManager.config.multiplication.isEnabled {
+                    Text("暂无启用的练习项目，请前往「练习配置」开启")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 8)
                 }
             }
         }

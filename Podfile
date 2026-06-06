@@ -15,3 +15,4 @@ post_install do |installer|
       config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
     end
   end
+end

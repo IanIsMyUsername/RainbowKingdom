@@ -10,6 +10,7 @@ import SwiftUI
 struct MathQuizView: View {
     @StateObject private var quizManager = MathQuizManager()
     @StateObject private var clockInManager = ClockInManager()
+    @StateObject private var configManager = PracticeConfigManager()
     @State private var selectedOperationType: MathOperationType = .mixed
     @State private var showingResult = false
     @State private var userAnswer = ""
@@ -69,10 +70,10 @@ struct MathQuizView: View {
                 Text("练习规则")
                     .font(.headline)
                     .foregroundColor(.primary)
-                
+
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("• 共10道题目")
-                    Text("• 数字范围：70以内")
+                    Text("• 共\(configManager.config.additionSubtraction.questionCount)道题目")
+                    Text("• 数字范围：\(configManager.config.additionSubtraction.maxNumber)以内")
                     Text("• 包含加法和减法")
                     Text("• 完成后自动打卡")
                 }
@@ -285,7 +286,9 @@ struct MathQuizView: View {
     
     // MARK: - 辅助方法
     private func startQuiz() {
-        quizManager.startQuiz(operationType: selectedOperationType, questionCount: 10)
+        let questionCount = configManager.config.additionSubtraction.questionCount
+        let maxNumber = configManager.config.additionSubtraction.maxNumber
+        quizManager.startQuiz(operationType: selectedOperationType, questionCount: questionCount, maxNumber: maxNumber)
         userAnswer = ""
     }
     

@@ -47,24 +47,28 @@ class RealmCalendarState: Object {
 class RealmEnglishTranslationConfig: EmbeddedObject {
     @Persisted var questionCount: Int = 30
     @Persisted var vocabularyWeeks: Int = 2 // 单词时间范围（月份）
+    @Persisted var isEnabled: Bool = true
 }
 
 /// 英语填空练习配置（嵌套对象）
 class RealmEnglishFillBlankConfig: EmbeddedObject {
     @Persisted var questionCount: Int = 10
     @Persisted var vocabularyWeeks: Int = 1 // 单词时间范围（月份）
+    @Persisted var isEnabled: Bool = true
 }
 
 /// 加减法练习配置（嵌套对象）
 class RealmAdditionSubtractionConfig: EmbeddedObject {
     @Persisted var questionCount: Int = 10
     @Persisted var maxNumber: Int = 40 // 多少以内
+    @Persisted var isEnabled: Bool = true
 }
 
 /// 乘法练习配置（嵌套对象）
 class RealmMultiplicationQuizConfig: EmbeddedObject {
     @Persisted var maxNumber: Int = 3 // 默认数字范围上限（小于3，即1-2）
     @Persisted var questionCount: Int = 10 // 默认题目数量
+    @Persisted var isEnabled: Bool = true
 }
 
 /// 统一的练习配置模型

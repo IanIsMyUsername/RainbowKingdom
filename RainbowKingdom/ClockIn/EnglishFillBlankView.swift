@@ -143,7 +143,7 @@ struct EnglishFillBlankView: View {
     
     private func questionCard(question: FillBlankQuestion) -> some View {
         VStack(alignment: .leading, spacing: 20) {
-            // 第一行：带提示的英文
+            // 第一行：隐藏后的英文
             Text(question.partialWord)
                 .font(.system(size: 32, weight: .bold, design: .monospaced))
                 .foregroundColor(.blue)
@@ -567,7 +567,7 @@ struct EnglishFillBlankView: View {
             }
             
             VStack(alignment: .leading, spacing: 8) {
-                Text("提示")
+                Text("填空")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.secondary)
                 
@@ -688,57 +688,7 @@ struct EnglishFillBlankView: View {
     }
     
     private func createPartialWord(from word: String) -> String {
-        let words = word.components(separatedBy: " ")
-        if words.count > 1 {
-            return maskSentenceWords(words)
-        }
-        return createPartialSingleWord(from: word)
-    }
-    
-    private func createPartialSingleWord(from word: String) -> String {
-        let letters = word.filter { $0.isLetter }
-        let letterCount = letters.count
-        
-        guard letterCount > 1 else { return word }
-        
-        let hideCount = max(1, (letterCount + 1) / 2)
-        let visibleLetterCount = letterCount - hideCount
-        let maskPrefix = Bool.random()
-        
-        var displayedWord = ""
-        var letterIndex = 0
-        
-        for char in word {
-            if char.isLetter {
-                let shouldShow: Bool
-                if maskPrefix {
-                    shouldShow = letterIndex >= hideCount
-                } else {
-                    shouldShow = letterIndex < visibleLetterCount
-                }
-                displayedWord.append(shouldShow ? char : "_")
-                letterIndex += 1
-            } else {
-                displayedWord.append(char)
-            }
-        }
-        
-        return displayedWord
-    }
-
-    private func maskSentenceWords(_ words: [String]) -> String {
-        guard !words.isEmpty else { return "" }
-        let maskWordCount = max(1, (words.count + 1) / 2)
-        let startMaskIndex = max(0, words.count - maskWordCount)
-        
-        let maskedWords = words.enumerated().map { index, word in
-            if index >= startMaskIndex {
-                return maskWholeWord(word)
-            }
-            return word
-        }
-        
-        return maskedWords.joined(separator: " ")
+        return maskWholeWord(word)
     }
 
     private func maskWholeWord(_ word: String) -> String {

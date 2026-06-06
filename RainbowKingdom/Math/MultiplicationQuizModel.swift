@@ -132,10 +132,12 @@ struct MultiplicationQuizResult: Identifiable, Codable {
 struct MultiplicationQuizConfig: Codable {
     var maxNumber: Int = 3 // 默认数字范围上限（小于3，即1-2）
     var questionCount: Int = 10 // 默认题目数量
-    
-    init(maxNumber: Int = 3, questionCount: Int = 10) {
+    var isEnabled: Bool = true
+
+    init(maxNumber: Int = 3, questionCount: Int = 10, isEnabled: Bool = true) {
         self.maxNumber = maxNumber
         self.questionCount = questionCount
+        self.isEnabled = isEnabled
     }
 }
 

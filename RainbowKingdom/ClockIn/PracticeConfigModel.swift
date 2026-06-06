@@ -27,18 +27,21 @@ struct PracticeConfig: Codable {
 struct EnglishTranslationConfig: Codable {
     var questionCount: Int = 30
     var vocabularyWeeks: Int = 2 // 单词时间范围（月份）
+    var isEnabled: Bool = true
 }
 
 // 英语填空练习配置
 struct EnglishFillBlankConfig: Codable {
     var questionCount: Int = 10
     var vocabularyWeeks: Int = 1 // 单词时间范围（月份）
+    var isEnabled: Bool = true
 }
 
 // 加减法练习配置
 struct AdditionSubtractionConfig: Codable {
     var questionCount: Int = 10
     var maxNumber: Int = 40 // 多少以内
+    var isEnabled: Bool = true
 }
 
 // 练习配置管理器
@@ -57,12 +60,16 @@ class PracticeConfigManager: ObservableObject {
                 try dbManager.update(realmConfig) { realm in
                     realm.englishTranslation?.questionCount = self.config.englishTranslation.questionCount
                     realm.englishTranslation?.vocabularyWeeks = self.config.englishTranslation.vocabularyWeeks
+                    realm.englishTranslation?.isEnabled = self.config.englishTranslation.isEnabled
                     realm.englishFillBlank?.questionCount = self.config.englishFillBlank.questionCount
                     realm.englishFillBlank?.vocabularyWeeks = self.config.englishFillBlank.vocabularyWeeks
+                    realm.englishFillBlank?.isEnabled = self.config.englishFillBlank.isEnabled
                     realm.additionSubtraction?.questionCount = self.config.additionSubtraction.questionCount
                     realm.additionSubtraction?.maxNumber = self.config.additionSubtraction.maxNumber
+                    realm.additionSubtraction?.isEnabled = self.config.additionSubtraction.isEnabled
                     realm.multiplication?.maxNumber = self.config.multiplication.maxNumber
                     realm.multiplication?.questionCount = self.config.multiplication.questionCount
+                    realm.multiplication?.isEnabled = self.config.multiplication.isEnabled
                 }
             } else {
                 let realmConfig = config.toRealm()

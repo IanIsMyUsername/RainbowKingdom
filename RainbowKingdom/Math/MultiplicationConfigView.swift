@@ -12,18 +12,22 @@ struct MultiplicationConfigView: View {
     @StateObject private var configManager = PracticeConfigManager()
     
     // 英语翻译配置
+    @State private var englishTranslationEnabled: Bool = true
     @State private var englishTranslationQuestionCount: Int = 30
     @State private var englishTranslationWeeks: Int = 2
-    
+
     // 英语填空配置
+    @State private var englishFillBlankEnabled: Bool = true
     @State private var englishFillBlankQuestionCount: Int = 10
     @State private var englishFillBlankWeeks: Int = 1
-    
+
     // 加减法配置
+    @State private var additionSubtractionEnabled: Bool = true
     @State private var additionSubtractionQuestionCount: Int = 10
     @State private var additionSubtractionMaxNumber: Int = 40
-    
+
     // 乘法配置
+    @State private var multiplicationEnabled: Bool = true
     @State private var multiplicationQuestionCount: Int = 10
     @State private var multiplicationMaxNumber: Int = 3
     
@@ -32,6 +36,9 @@ struct MultiplicationConfigView: View {
             Form {
                 // 英语翻译练习配置
                 Section(header: Text("英语翻译练习")) {
+                    Toggle("启用英语翻译练习", isOn: $englishTranslationEnabled)
+                        .tint(.blue)
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("题目数量: \(englishTranslationQuestionCount)")
                             .font(.headline)
@@ -79,6 +86,9 @@ struct MultiplicationConfigView: View {
                 
                 // 英语填空练习配置
                 Section(header: Text("英语填空练习")) {
+                    Toggle("启用英语填空练习", isOn: $englishFillBlankEnabled)
+                        .tint(.purple)
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("题目数量: \(englishFillBlankQuestionCount)")
                             .font(.headline)
@@ -126,6 +136,9 @@ struct MultiplicationConfigView: View {
                 
                 // 加减法练习配置
                 Section(header: Text("加减法练习")) {
+                    Toggle("启用加减法练习", isOn: $additionSubtractionEnabled)
+                        .tint(.green)
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("题目数量: \(additionSubtractionQuestionCount)")
                             .font(.headline)
@@ -151,15 +164,15 @@ struct MultiplicationConfigView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("数字范围: \(additionSubtractionMaxNumber) 以内")
                             .font(.headline)
-                        
+
                         Slider(value: Binding<Double>(
                             get: { Double(additionSubtractionMaxNumber) },
                             set: { additionSubtractionMaxNumber = Int($0) }
-                        ), in: 20...100, step: 10)
+                        ), in: 10...100, step: 10)
                         .accentColor(.red)
-                        
+
                         HStack {
-                            Text("20")
+                            Text("10")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Spacer()
@@ -173,6 +186,9 @@ struct MultiplicationConfigView: View {
                 
                 // 乘法练习配置
                 Section(header: Text("乘法练习")) {
+                    Toggle("启用乘法练习", isOn: $multiplicationEnabled)
+                        .tint(.orange)
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("题目数量: \(multiplicationQuestionCount)")
                             .font(.headline)
@@ -247,36 +263,44 @@ struct MultiplicationConfigView: View {
     
     private func loadConfig() {
         // 加载英语翻译配置
+        englishTranslationEnabled = configManager.config.englishTranslation.isEnabled
         englishTranslationQuestionCount = configManager.config.englishTranslation.questionCount
         englishTranslationWeeks = configManager.config.englishTranslation.vocabularyWeeks
-        
+
         // 加载英语填空配置
+        englishFillBlankEnabled = configManager.config.englishFillBlank.isEnabled
         englishFillBlankQuestionCount = configManager.config.englishFillBlank.questionCount
         englishFillBlankWeeks = configManager.config.englishFillBlank.vocabularyWeeks
-        
+
         // 加载加减法配置
+        additionSubtractionEnabled = configManager.config.additionSubtraction.isEnabled
         additionSubtractionQuestionCount = configManager.config.additionSubtraction.questionCount
         additionSubtractionMaxNumber = configManager.config.additionSubtraction.maxNumber
-        
+
         // 加载乘法配置
+        multiplicationEnabled = configManager.config.multiplication.isEnabled
         multiplicationQuestionCount = configManager.config.multiplication.questionCount
         multiplicationMaxNumber = configManager.config.multiplication.maxNumber
     }
-    
+
     private func saveConfig() {
         // 保存英语翻译配置
+        configManager.config.englishTranslation.isEnabled = englishTranslationEnabled
         configManager.config.englishTranslation.questionCount = englishTranslationQuestionCount
         configManager.config.englishTranslation.vocabularyWeeks = englishTranslationWeeks
-        
+
         // 保存英语填空配置
+        configManager.config.englishFillBlank.isEnabled = englishFillBlankEnabled
         configManager.config.englishFillBlank.questionCount = englishFillBlankQuestionCount
         configManager.config.englishFillBlank.vocabularyWeeks = englishFillBlankWeeks
-        
+
         // 保存加减法配置
+        configManager.config.additionSubtraction.isEnabled = additionSubtractionEnabled
         configManager.config.additionSubtraction.questionCount = additionSubtractionQuestionCount
         configManager.config.additionSubtraction.maxNumber = additionSubtractionMaxNumber
-        
+
         // 保存乘法配置
+        configManager.config.multiplication.isEnabled = multiplicationEnabled
         configManager.config.multiplication.questionCount = multiplicationQuestionCount
         configManager.config.multiplication.maxNumber = multiplicationMaxNumber
         

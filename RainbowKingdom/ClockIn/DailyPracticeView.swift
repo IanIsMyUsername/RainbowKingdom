@@ -10,6 +10,7 @@ import SwiftUI
 struct DailyPracticeView: View {
     @StateObject private var clockInManager = ClockInManager()
     @StateObject private var vocabularyManager = VocabularyManager()
+    @StateObject private var configManager = PracticeConfigManager()
     @State private var showingEnglishPractice = false
     @State private var showingEnglishTranslation = false
     @State private var showingEnglishFillBlank = false
@@ -177,97 +178,114 @@ struct DailyPracticeView: View {
             
             VStack(spacing: 10) {
                 // 英语翻译打卡状态
-                HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "英语翻译") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
-                        .font(.title2)
-                    
-                    VStack(alignment: .leading) {
-                        Text("英语翻译")
-                            .font(.headline)
+                if configManager.config.englishTranslation.isEnabled {
+                    HStack {
+                        Image(systemName: clockInManager.hasCheckedInToday(subject: "英语翻译") ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
-                        
-                        if let englishTranslationRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语翻译") {
-                            Text("得分: \(englishTranslationRecord.score)/\(englishTranslationRecord.totalQuestions) (\(String(format: "%.1f", englishTranslationRecord.percentage))%)")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("未完成")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                            .font(.title2)
+
+                        VStack(alignment: .leading) {
+                            Text("英语翻译")
+                                .font(.headline)
+                                .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语翻译") ? .green : .gray)
+
+                            if let englishTranslationRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "英语翻译") {
+                                Text("得分: \(englishTranslationRecord.score)/\(englishTranslationRecord.totalQuestions) (\(String(format: "%.1f", englishTranslationRecord.percentage))%)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("未完成")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
                         }
+
+                        Spacer()
                     }
-                    
-                    Spacer()
                 }
-                
+
                 // 英语填空打卡状态
-                HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "英语填空") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
-                        .font(.title2)
-                    
-                    VStack(alignment: .leading) {
-                        Text("英语填空")
-                            .font(.headline)
+                if configManager.config.englishFillBlank.isEnabled {
+                    HStack {
+                        Image(systemName: clockInManager.hasCheckedInToday(subject: "英语填空") ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
-                        
-                        Text(clockInManager.hasCheckedInToday(subject: "英语填空") ? "已完成" : "未完成")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .font(.title2)
+
+                        VStack(alignment: .leading) {
+                            Text("英语填空")
+                                .font(.headline)
+                                .foregroundColor(clockInManager.hasCheckedInToday(subject: "英语填空") ? .green : .gray)
+
+                            Text(clockInManager.hasCheckedInToday(subject: "英语填空") ? "已完成" : "未完成")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
                     }
-                    
-                    Spacer()
                 }
-                
+
                 // 加减法打卡状态
-                HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "加减法") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
-                        .font(.title2)
-                    
-                    VStack(alignment: .leading) {
-                        Text("加减法练习")
-                            .font(.headline)
+                if configManager.config.additionSubtraction.isEnabled {
+                    HStack {
+                        Image(systemName: clockInManager.hasCheckedInToday(subject: "加减法") ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
-                        
-                        if let mathRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "加减法") {
-                            Text("得分: \(mathRecord.score)/\(mathRecord.totalQuestions) (\(String(format: "%.1f", mathRecord.percentage))%)")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("未完成")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                            .font(.title2)
+
+                        VStack(alignment: .leading) {
+                            Text("加减法练习")
+                                .font(.headline)
+                                .foregroundColor(clockInManager.hasCheckedInToday(subject: "加减法") ? .green : .gray)
+
+                            if let mathRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "加减法") {
+                                Text("得分: \(mathRecord.score)/\(mathRecord.totalQuestions) (\(String(format: "%.1f", mathRecord.percentage))%)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("未完成")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
                         }
+
+                        Spacer()
                     }
-                    
-                    Spacer()
                 }
-                
+
                 // 乘法打卡状态
-                HStack {
-                    Image(systemName: clockInManager.hasCheckedInToday(subject: "乘法") ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
-                        .font(.title2)
-                    
-                    VStack(alignment: .leading) {
-                        Text("乘法练习")
-                            .font(.headline)
+                if configManager.config.multiplication.isEnabled {
+                    HStack {
+                        Image(systemName: clockInManager.hasCheckedInToday(subject: "乘法") ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
-                        
-                        if let multiplicationRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "乘法") {
-                            Text("得分: \(multiplicationRecord.score)/\(multiplicationRecord.totalQuestions) (\(String(format: "%.1f", multiplicationRecord.percentage))%)")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text("未完成")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                            .font(.title2)
+
+                        VStack(alignment: .leading) {
+                            Text("乘法练习")
+                                .font(.headline)
+                                .foregroundColor(clockInManager.hasCheckedInToday(subject: "乘法") ? .green : .gray)
+
+                            if let multiplicationRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: "乘法") {
+                                Text("得分: \(multiplicationRecord.score)/\(multiplicationRecord.totalQuestions) (\(String(format: "%.1f", multiplicationRecord.percentage))%)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("未完成")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
                         }
+
+                        Spacer()
                     }
-                    
-                    Spacer()
+                }
+
+                if !configManager.config.englishTranslation.isEnabled
+                    && !configManager.config.englishFillBlank.isEnabled
+                    && !configManager.config.additionSubtraction.isEnabled
+                    && !configManager.config.multiplication.isEnabled {
+                    Text("今日无启用的练习项目，可在「练习配置」中开启")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
             }
         }
@@ -288,6 +306,7 @@ struct DailyPracticeView: View {
                 .foregroundColor(.primary)
             
             VStack(spacing: 12) {
+                if configManager.config.englishTranslation.isEnabled {
                 // 英语练习按钮
                 Button(action: {
                     showingEnglishPractice = true
@@ -323,7 +342,9 @@ struct DailyPracticeView: View {
                     )
                     .cornerRadius(12)
                 }
-                
+                }
+
+                if configManager.config.englishFillBlank.isEnabled {
                 // 英语填空练习按钮
                 Button(action: {
                     showingEnglishFillBlank = true
@@ -338,7 +359,7 @@ struct DailyPracticeView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                             
-                            Text("10个填空题，根据中文和提示填写完整单词")
+                            Text("10个填空题，根据中文填写完整单词")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
@@ -359,7 +380,9 @@ struct DailyPracticeView: View {
                     )
                     .cornerRadius(12)
                 }
-                
+                }
+
+                if configManager.config.additionSubtraction.isEnabled {
                 // 加减法练习按钮
                 Button(action: {
                     showingMathPractice = true
@@ -373,8 +396,8 @@ struct DailyPracticeView: View {
                             Text("加减法练习")
                                 .font(.headline)
                                 .foregroundColor(.white)
-                            
-                            Text("10道加减法题目，70以内连续加减2个数")
+
+                            Text("\(configManager.config.additionSubtraction.questionCount)道加减法题目，\(configManager.config.additionSubtraction.maxNumber)以内连续加减2个数")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                         }
@@ -396,7 +419,9 @@ struct DailyPracticeView: View {
                     .cornerRadius(12)
                 }
                 .disabled(clockInManager.hasCheckedInToday(subject: "加减法"))
-                
+                }
+
+                if configManager.config.multiplication.isEnabled {
                 // 乘法练习按钮
                 Button(action: {
                     showingMultiplicationPractice = true
@@ -432,6 +457,18 @@ struct DailyPracticeView: View {
                     )
                     .cornerRadius(12)
                 }
+                }
+
+                if !configManager.config.englishTranslation.isEnabled
+                    && !configManager.config.englishFillBlank.isEnabled
+                    && !configManager.config.additionSubtraction.isEnabled
+                    && !configManager.config.multiplication.isEnabled {
+                    Text("暂无启用的练习项目，请前往「练习配置」开启")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 8)
+                }
             }
         }
         .padding()
@@ -441,7 +478,7 @@ struct DailyPracticeView: View {
                 .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
         )
     }
-    
+
     // 历史记录按钮
     private var historyButton: some View {
         Button(action: {
