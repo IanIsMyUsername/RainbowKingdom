@@ -217,20 +217,13 @@ struct EnglishFillBlankView: View {
                         let letterIndex = getLetterIndex(upTo: index, in: word)
                         Button(action: {
                             if !showAnswerFeedback || needsCorrection {
-                                // 如果需要订正，清除之前填写的单词
+                                // 订正模式：保留已填内容，直接在点击的位置修改
                                 if needsCorrection {
-                                    // 确保数组足够大
-                                    while userInputs.count <= currentQuestionIndex {
-                                        userInputs.append([])
-                                    }
-                                    // 清空当前题目的所有输入
-                                    userInputs[currentQuestionIndex] = []
-                                    // 重置反馈状态，允许重新输入
                                     showAnswerFeedback = false
-                                }
-                                
-                                // 如果键盘未展开，自动定位到第一个空白位置
-                                if !showKeyboard {
+                                    needsCorrection = false
+                                    focusedIndex = letterIndex
+                                } else if !showKeyboard {
+                                    // 如果键盘未展开，自动定位到第一个空白位置
                                     focusedIndex = findFirstEmptyPosition(in: word)
                                 } else {
                                     focusedIndex = letterIndex
@@ -310,6 +303,19 @@ struct EnglishFillBlankView: View {
         return count
     }
     
+    /// 找到第一个填错（或没填）的字母位置，用于订正时直接定位
+    private func findFirstWrongPosition(in word: String) -> Int {
+        let correctLetters = word.lowercased().filter { $0.isLetter }.map { String($0) }
+        let currentInputs = getCurrentQuestionInputs()
+
+        for (i, correct) in correctLetters.enumerated() {
+            if i >= currentInputs.count || currentInputs[i].lowercased() != correct {
+                return i
+            }
+        }
+        return 0
+    }
+
     private func findFirstEmptyPosition(in word: String) -> Int {
         let currentInputs = getCurrentQuestionInputs()
         let letterCount = word.filter { $0.isLetter }.count
@@ -412,9 +418,10 @@ struct EnglishFillBlankView: View {
                 Button("订正") {
                     showAnswerFeedback = false
                     needsCorrection = false
-                    // 清空当前题目的所有输入
-                    if currentQuestionIndex < userInputs.count {
-                        userInputs[currentQuestionIndex] = []
+                    // 保留已填内容，定位到第一个错误的字母，让用户直接修改
+                    if let question = getCurrentQuestion() {
+                        focusedIndex = findFirstWrongPosition(in: question.correctAnswer)
+                        showKeyboard = true
                     }
                 }
                 .foregroundColor(.white)
