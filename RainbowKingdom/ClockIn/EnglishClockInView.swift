@@ -7,6 +7,21 @@
 
 import SwiftUI
 
+/// 翻译练习的三种题型
+private enum TranslationKind {
+    case englishToChinese  // 看英文选中文（题目旁可听英文）
+    case chineseToEnglish  // 看中文选英文（每个英文选项可听）
+    case listening  // 听力：点击播放英文，选中文翻译
+
+    var label: String {
+        switch self {
+        case .englishToChinese: return "英译中"
+        case .chineseToEnglish: return "中译英"
+        case .listening: return "听力"
+        }
+    }
+}
+
 struct EnglishClockInView: View {
     let targetDate: Date? // 补打卡的目标日期，nil表示正常打卡（使用今天）
     @EnvironmentObject var clockInManager: ClockInManager
@@ -27,7 +42,9 @@ struct EnglishClockInView: View {
     @State private var correctAnswer = ""
     @State private var showSummary = false
     @State private var submittedQuestions: Set<Int> = [] // 跟踪已提交的题目
-    
+    @State private var questionKinds: [TranslationKind] = [] // 与 questions 按下标对应的题型
+    @ObservedObject private var speech = WordSpeechService.shared
+
     init(targetDate: Date? = nil) {
         self.targetDate = targetDate
     }
@@ -77,12 +94,12 @@ struct EnglishClockInView: View {
             
             // 题目内容
             if let question = getCurrentQuestion() {
-                questionCard(question: question)
+                questionCard(question: question, kind: currentKind)
             }
-            
+
             // 选项按钮
             if let question = getCurrentQuestion(), let options = question.options {
-                optionsView(question: question, options: options)
+                optionsView(question: question, options: options, kind: currentKind)
             }
             
             // 导航按钮
@@ -112,15 +129,74 @@ struct EnglishClockInView: View {
         }
     }
     
+    // 当前题目的题型
+    private var currentKind: TranslationKind {
+        guard currentQuestionIndex < questionKinds.count else { return .englishToChinese }
+        return questionKinds[currentQuestionIndex]
+    }
+
     // 题目卡片
-    private func questionCard(question: QuizQuestion) -> some View {
+    private func questionCard(question: QuizQuestion, kind: TranslationKind) -> some View {
         VStack(alignment: .leading, spacing: 15) {
-            Text(question.question)
-                .font(.title2)
-                .fontWeight(.medium)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.leading)
-            
+            switch kind {
+            case .listening:
+                // 听力题：点击播放，不显示英文原句（提交后揭示）
+                VStack(spacing: 14) {
+                    Text("听一听，选出正确的中文意思")
+                        .font(.title3)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+
+                    Button(action: {
+                        speech.speak(question.vocabulary.english)
+                    }) {
+                        HStack(spacing: 10) {
+                            Image(systemName: speech.isSpeaking ? "speaker.wave.3.fill" : "play.circle.fill")
+                                .font(.system(size: 40))
+                            Text("点击播放")
+                                .font(.headline)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 28)
+                        .padding(.vertical, 14)
+                        .background(Capsule().fill(Color.blue))
+                    }
+                    .buttonStyle(.plain)
+
+                    if showAnswerFeedback {
+                        Text(question.vocabulary.english)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.blue)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            case .englishToChinese:
+                // 英译中：题目旁可听英文
+                HStack(alignment: .top, spacing: 10) {
+                    Text(question.question)
+                        .font(.title2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
+
+                    Button(action: {
+                        speech.speak(question.vocabulary.english)
+                    }) {
+                        Image(systemName: "speaker.wave.2")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                    }
+                    .buttonStyle(.plain)
+                }
+            case .chineseToEnglish:
+                Text(question.question)
+                    .font(.title2)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+            }
+
             if let hint = question.hint {
                 Text(hint)
                     .font(.caption)
@@ -140,7 +216,7 @@ struct EnglishClockInView: View {
     }
     
     // 选项视图
-    private func optionsView(question: QuizQuestion, options: [String]) -> some View {
+    private func optionsView(question: QuizQuestion, options: [String], kind: TranslationKind) -> some View {
         VStack(spacing: 12) {
             ForEach(Array(options.enumerated()), id: \.offset) { index, option in
                 Button(action: {
@@ -153,9 +229,21 @@ struct EnglishClockInView: View {
                             .font(.body)
                             .foregroundColor(getOptionTextColor(option: option, correctAnswer: question.correctAnswer))
                             .multilineTextAlignment(.leading)
-                        
+
                         Spacer()
-                        
+
+                        // 中译英：每个英文选项可以点喇叭试听
+                        if kind == .chineseToEnglish {
+                            Image(systemName: "speaker.wave.2")
+                                .font(.body)
+                                .foregroundColor(getOptionTextColor(option: option, correctAnswer: question.correctAnswer).opacity(0.85))
+                                .padding(6)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    speech.speak(option)
+                                }
+                        }
+
                         if selectedAnswer == option {
                             if showAnswerFeedback {
                                 Image(systemName: isAnswerCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
@@ -273,10 +361,10 @@ struct EnglishClockInView: View {
             // 题目详情列表
             ScrollView {
                 LazyVStack(spacing: 15) {
-                    ForEach(Array(questions.enumerated()), id: \.offset) { index, question in
+                    ForEach(Array(questions.enumerated()), id: \.offset) { index, _ in
                         QuestionSummaryRow(
                             questionNumber: index + 1,
-                            question: question,
+                            question: recordQuestion(at: index),
                             userAnswer: index < userAnswers.count ? userAnswers[index] : "",
                             isCorrect: isAnswerCorrect(for: index)
                         )
@@ -460,43 +548,66 @@ struct EnglishClockInView: View {
         // 打乱顺序
         selectedVocabularies = selectedVocabularies.shuffled()
         
-        // 生成题目
-        for vocabulary in selectedVocabularies.prefix(questionCount) {
-            let isEnglishToChinese = Bool.random()
-            
+        // 生成题目：三种题型（英译中/中译英/听力）轮流分配，保证数量均衡
+        let kindCycle: [TranslationKind] = [.englishToChinese, .chineseToEnglish, .listening]
+        var kinds: [TranslationKind] = []
+
+        for (index, vocabulary) in selectedVocabularies.prefix(questionCount).enumerated() {
+            let kind = kindCycle[index % kindCycle.count]
+
             let question: String
             let correctAnswer: String
             let options: [String]
-            
-            if isEnglishToChinese {
+
+            switch kind {
+            case .englishToChinese:
                 question = "请选择以下英文的中文意思：\n\(vocabulary.english)"
                 correctAnswer = vocabulary.chinese
-                
-                // 生成错误选项
                 let wrongOptions = generateWrongOptions(for: vocabulary.chinese, isChinese: true, allVocabularies: vocabularies)
                 options = ([correctAnswer] + wrongOptions).shuffled()
-            } else {
+            case .chineseToEnglish:
                 question = "请选择以下中文的英文翻译：\n\(vocabulary.chinese)"
                 correctAnswer = vocabulary.english
-                
-                // 生成错误选项
                 let wrongOptions = generateWrongOptions(for: vocabulary.english, isChinese: false, allVocabularies: vocabularies)
                 options = ([correctAnswer] + wrongOptions).shuffled()
+            case .listening:
+                // 英文原句不写进题面，答题时只能靠听
+                question = "听一听，选出正确的中文意思"
+                correctAnswer = vocabulary.chinese
+                let wrongOptions = generateWrongOptions(for: vocabulary.chinese, isChinese: true, allVocabularies: vocabularies)
+                options = ([correctAnswer] + wrongOptions).shuffled()
             }
-            
+
             let quizQuestion = QuizQuestion(
                 vocabulary: vocabulary,
                 questionType: .multipleChoice,
                 question: question,
                 correctAnswer: correctAnswer,
                 options: options,
-                hint: "类型：\(vocabulary.type.rawValue)"
+                hint: "类型：\(vocabulary.type.rawValue)｜\(kind.label)"
             )
-            
+
             questions.append(quizQuestion)
+            kinds.append(kind)
         }
-        
+
+        questionKinds = kinds
         return questions
+    }
+
+    /// 用于总结页和打卡记录的题目：听力题揭示英文原句
+    private func recordQuestion(at index: Int) -> QuizQuestion {
+        let q = questions[index]
+        guard index < questionKinds.count, questionKinds[index] == .listening else { return q }
+        return QuizQuestion(
+            id: q.id,
+            vocabulary: q.vocabulary,
+            questionType: q.questionType,
+            question: "听力题（\(q.vocabulary.english)）：选出正确的中文意思",
+            correctAnswer: q.correctAnswer,
+            options: q.options,
+            hint: q.hint
+        )
     }
     
     // 生成错误选项
@@ -604,7 +715,7 @@ struct EnglishClockInView: View {
         // 确定记录的日期：如果提供了targetDate（补打卡），使用targetDate；否则使用今天
         let recordDate = targetDate ?? Date()
         
-        // 创建打卡记录
+        // 创建打卡记录（听力题的题面写入英文原句，方便回看）
         let record = ClockInRecord(
             date: recordDate,
             subject: "英语翻译",
@@ -612,7 +723,7 @@ struct EnglishClockInView: View {
             totalQuestions: questions.count,
             timeSpent: timeSpent,
             completedDate: Date(), // completedDate始终使用当前时间
-            questions: questions,
+            questions: questions.indices.map { recordQuestion(at: $0) },
             userAnswers: userAnswers
         )
         
@@ -680,6 +791,7 @@ struct EnglishClockInView: View {
         correctAnswer = ""
         showSummary = false
         submittedQuestions = []
+        questionKinds = []
         quizStartTime = nil
         startQuiz()
     }
