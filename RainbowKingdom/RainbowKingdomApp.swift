@@ -17,6 +17,10 @@ struct RainbowKingdomApp: App {
   var body: some Scene {
     WindowGroup {
       ContentView()
+        .task {
+          // 预热本地 TTS：安装打包的 Kokoro 模型并加载（首次启动需编译，约十几秒）
+          WordSpeechService.shared.warmUp()
+        }
     }
   }
   

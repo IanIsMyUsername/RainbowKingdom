@@ -29,6 +29,7 @@ struct EnglishFillBlankView: View {
     @State private var needsCorrection = false
     @State private var answeredCorrectly: Set<Int> = [] // 首次答对的题目
     @State private var initiallyWrong: Set<Int> = [] // 首次答错的题目
+    @ObservedObject private var speech = WordSpeechService.shared
     
     init(targetDate: Date? = nil) {
         self.targetDate = targetDate
@@ -143,12 +144,16 @@ struct EnglishFillBlankView: View {
     
     private func questionCard(question: FillBlankQuestion) -> some View {
         VStack(alignment: .leading, spacing: 20) {
-            // 第一行：隐藏后的英文
-            Text(question.partialWord)
-                .font(.system(size: 32, weight: .bold, design: .monospaced))
-                .foregroundColor(.blue)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
+            // 第一行：隐藏后的英文 + 发音按钮（听音拼词）
+            HStack(spacing: 12) {
+                Text(question.partialWord)
+                    .font(.system(size: 32, weight: .bold, design: .monospaced))
+                    .foregroundColor(.blue)
+                    .multilineTextAlignment(.center)
+
+                speakerButton(for: question.correctAnswer, size: .title2)
+            }
+            .frame(maxWidth: .infinity)
             
             // 第二行：中文翻译
             Text(question.chineseTranslation)
@@ -159,12 +164,8 @@ struct EnglishFillBlankView: View {
                 .frame(maxWidth: .infinity)
             
             // 第三行：输入区域
-            HStack {
-                Spacer()
-                inputAreaView(word: question.correctAnswer)
-                Spacer()
-            }
-            .padding(.horizontal)
+            inputAreaView(word: question.correctAnswer)
+                .padding(.horizontal)
             
             // 反馈信息
             if showAnswerFeedback {
@@ -184,6 +185,8 @@ struct EnglishFillBlankView: View {
                             Text("正确答案: \(question.correctAnswer)")
                                 .font(.body)
                                 .foregroundColor(.secondary)
+
+                            speakerButton(for: question.correctAnswer, size: .body)
                         }
                     }
                     .padding()
@@ -207,8 +210,9 @@ struct EnglishFillBlankView: View {
     
     private func inputAreaView(word: String) -> some View {
         VStack(spacing: 12) {
-            HStack(spacing: 4) {
-                ForEach(Array(word.enumerated()), id: \.offset) { index, char in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 4) {
+                    ForEach(Array(word.enumerated()), id: \.offset) { index, char in
                     if char.isLetter {
                         let letterIndex = getLetterIndex(upTo: index, in: word)
                         Button(action: {
@@ -257,10 +261,12 @@ struct EnglishFillBlankView: View {
                             .foregroundColor(.secondary)
                             .frame(width: 32, height: 40)
                     }
+                    }
                 }
+                .padding(.horizontal, 4)
+                .frame(minWidth: UIScreen.main.bounds.width - 64, alignment: .center)
             }
-            .frame(maxWidth: .infinity)
-            
+
             if showKeyboard, let index = focusedIndex {
                 KeyboardView(
                     onInput: { char in
@@ -590,10 +596,14 @@ struct EnglishFillBlankView: View {
                 Text("正确答案")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.secondary)
-                
-                Text(question.correctAnswer)
-                    .font(.system(size: 16, design: .monospaced))
-                    .foregroundColor(.green)
+
+                HStack(spacing: 10) {
+                    Text(question.correctAnswer)
+                        .font(.system(size: 16, design: .monospaced))
+                        .foregroundColor(.green)
+
+                    speakerButton(for: question.correctAnswer, size: .body)
+                }
             }
         }
         .padding(16)
@@ -609,6 +619,18 @@ struct EnglishFillBlankView: View {
         .padding(.horizontal, 20)
     }
     
+    /// 发音按钮：点击朗读单词（Kokoro 本地合成，失败时回退系统语音）
+    private func speakerButton(for word: String, size: Font) -> some View {
+        Button(action: {
+            speech.speak(word)
+        }) {
+            Image(systemName: speech.isSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
+                .font(size)
+                .foregroundColor(.blue)
+        }
+        .buttonStyle(.plain)
+    }
+
     private func getQuestionUserAnswer(index: Int) -> String {
         if index < userInputs.count {
             return userInputs[index].joined()

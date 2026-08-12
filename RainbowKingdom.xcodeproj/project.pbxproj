@@ -7,51 +7,60 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C85A10ADA6D759B52960799E /* Pods_RainbowKingdom.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 006C25C9467C12EE991B7DC6 /* Pods_RainbowKingdom.framework */; };
+		52AABB012E7B100000000001 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 52AABB002E7B100000000000 /* RealmSwift */; };
+		52AABB032E7B100000000003 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 52AABB022E7B100000000002 /* FluidAudio */; };
+		52AABB042E7B100000000004 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 52AABB002E7B100000000000 /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		52AABB212E7B100000000021 /* BundledModels in Resources */ = {isa = PBXBuildFile; fileRef = 52AABB202E7B100000000020 /* BundledModels */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		006C25C9467C12EE991B7DC6 /* Pods_RainbowKingdom.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RainbowKingdom.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		52AABB202E7B100000000020 /* BundledModels */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledModels; sourceTree = "<group>"; };
 		52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RainbowKingdom.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		960D79AA6C3DF68165170B59 /* Pods-RainbowKingdom.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RainbowKingdom.release.xcconfig"; path = "Target Support Files/Pods-RainbowKingdom/Pods-RainbowKingdom.release.xcconfig"; sourceTree = "<group>"; };
-		A405C5F48897959A522E3FC6 /* Pods-RainbowKingdom.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RainbowKingdom.debug.xcconfig"; path = "Target Support Files/Pods-RainbowKingdom/Pods-RainbowKingdom.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5222DE082E73086500FAB58B /* RainbowKingdom */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = RainbowKingdom;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		52AABB302E7B100000000030 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				52AABB042E7B100000000004 /* RealmSwift in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		5222DE032E73086500FAB58B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C85A10ADA6D759B52960799E /* Pods_RainbowKingdom.framework in Frameworks */,
+				52AABB012E7B100000000001 /* RealmSwift in Frameworks */,
+				52AABB032E7B100000000003 /* FluidAudio in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		393AA5A64BFC75ED846437DD /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				006C25C9467C12EE991B7DC6 /* Pods_RainbowKingdom.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		5222DDFD2E73086500FAB58B = {
 			isa = PBXGroup;
 			children = (
 				5222DE082E73086500FAB58B /* RainbowKingdom */,
+				52AABB202E7B100000000020 /* BundledModels */,
 				5222DE072E73086500FAB58B /* Products */,
-				D4495F025FA0AC991E9F2B8F /* Pods */,
-				393AA5A64BFC75ED846437DD /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -63,15 +72,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		D4495F025FA0AC991E9F2B8F /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				A405C5F48897959A522E3FC6 /* Pods-RainbowKingdom.debug.xcconfig */,
-				960D79AA6C3DF68165170B59 /* Pods-RainbowKingdom.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -79,11 +79,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5222DE142E73086600FAB58B /* Build configuration list for PBXNativeTarget "RainbowKingdom" */;
 			buildPhases = (
-				621DDF3857EC09A93881ACEE /* [CP] Check Pods Manifest.lock */,
 				5222DE022E73086500FAB58B /* Sources */,
 				5222DE032E73086500FAB58B /* Frameworks */,
 				5222DE042E73086500FAB58B /* Resources */,
-				1078EE9FB001E003DBCEEA25 /* [CP] Copy Pods Resources */,
+				52AABB302E7B100000000030 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -93,6 +92,10 @@
 				5222DE082E73086500FAB58B /* RainbowKingdom */,
 			);
 			name = RainbowKingdom;
+			packageProductDependencies = (
+				52AABB002E7B100000000000 /* RealmSwift */,
+				52AABB022E7B100000000002 /* FluidAudio */,
+			);
 			productName = RainbowKingdom;
 			productReference = 52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */;
 			productType = "com.apple.product-type.application";
@@ -121,6 +124,10 @@
 			);
 			mainGroup = 5222DDFD2E73086500FAB58B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				52AABB102E7B100000000010 /* XCRemoteSwiftPackageReference "realm-swift" */,
+				52AABB112E7B100000000011 /* XCRemoteSwiftPackageReference "FluidAudio" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5222DE072E73086500FAB58B /* Products */;
 			projectDirPath = "";
@@ -136,56 +143,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				52AABB212E7B100000000021 /* BundledModels in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		1078EE9FB001E003DBCEEA25 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-RainbowKingdom/Pods-RainbowKingdom-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-RainbowKingdom/Pods-RainbowKingdom-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-RainbowKingdom/Pods-RainbowKingdom-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		621DDF3857EC09A93881ACEE /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-RainbowKingdom-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5222DE022E73086500FAB58B /* Sources */ = {
@@ -319,7 +281,6 @@
 		};
 		5222DE152E73086600FAB58B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A405C5F48897959A522E3FC6 /* Pods-RainbowKingdom.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -335,13 +296,13 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.chunxiao.RainbowKingdom1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.chunxiao.RainbowKingdom;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -351,7 +312,6 @@
 		};
 		5222DE162E73086600FAB58B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 960D79AA6C3DF68165170B59 /* Pods-RainbowKingdom.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -367,13 +327,13 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.chunxiao.RainbowKingdom1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.chunxiao.RainbowKingdom;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -403,6 +363,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		52AABB102E7B100000000010 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/realm-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 20.0.0;
+			};
+		};
+		52AABB112E7B100000000011 /* XCRemoteSwiftPackageReference "FluidAudio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/FluidInference/FluidAudio.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.12.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		52AABB002E7B100000000000 /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 52AABB102E7B100000000010 /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = RealmSwift;
+		};
+		52AABB022E7B100000000002 /* FluidAudio */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 52AABB112E7B100000000011 /* XCRemoteSwiftPackageReference "FluidAudio" */;
+			productName = FluidAudio;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5222DDFE2E73086500FAB58B /* Project object */;
 }
