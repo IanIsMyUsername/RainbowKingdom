@@ -443,7 +443,7 @@ class VocabularyManager: ObservableObject {
                 let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
                 if trimmedLine.isEmpty || trimmedLine.hasPrefix("英文") { continue } // 跳过空行和标题行
                 
-                let components = trimmedLine.components(separatedBy: ",")
+                let components = CSVParsing.fields(from: trimmedLine)
                 if components.count >= 3 {
                     let english = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
                     let chinese = components[1].trimmingCharacters(in: .whitespacesAndNewlines)

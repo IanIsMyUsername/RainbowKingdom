@@ -13,21 +13,6 @@
 		52AABB212E7B100000000021 /* BundledModels in Resources */ = {isa = PBXBuildFile; fileRef = 52AABB202E7B100000000020 /* BundledModels */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXFileReference section */
-		52AABB202E7B100000000020 /* BundledModels */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledModels; sourceTree = "<group>"; };
-		52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RainbowKingdom.app; sourceTree = BUILT_PRODUCTS_DIR; };
-/* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		5222DE082E73086500FAB58B /* RainbowKingdom */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
-			path = RainbowKingdom;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		52AABB302E7B100000000030 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -41,6 +26,19 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		52AABB202E7B100000000020 /* BundledModels */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledModels; sourceTree = "<group>"; };
+		52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RainbowKingdom.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		5222DE082E73086500FAB58B /* RainbowKingdom */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RainbowKingdom;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		5222DE032E73086500FAB58B /* Frameworks */ = {

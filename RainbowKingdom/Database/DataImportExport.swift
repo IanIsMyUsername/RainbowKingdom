@@ -258,7 +258,7 @@ class DataImportExport {
                 let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
                 if trimmedLine.isEmpty { continue }
                 
-                let components = trimmedLine.components(separatedBy: ",")
+                let components = CSVParsing.fields(from: trimmedLine)
                 if components.count >= 3 {
                     let english = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
                     let chinese = components[1].trimmingCharacters(in: .whitespacesAndNewlines)
