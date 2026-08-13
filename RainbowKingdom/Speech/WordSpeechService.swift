@@ -25,6 +25,9 @@ final class WordSpeechService: NSObject, ObservableObject {
     @Published private(set) var engineState: EngineState = .idle
     @Published private(set) var isSpeaking = false
 
+    /// Kokoro 语速：1.0 为正常，越小越慢（0.8 ≈ 慢 20%，适合跟读）
+    private let kokoroSpeed: Float = 0.8
+
     private var kokoro: KokoroAneManager?
     private let systemSynthesizer = AVSpeechSynthesizer()
     private var player: AVAudioPlayer?
@@ -79,8 +82,8 @@ final class WordSpeechService: NSObject, ObservableObject {
 
             activateAudioSession()
 
-            // 1. 磁盘缓存直接播
-            let cacheURL = Self.cacheFileURL(for: trimmed)
+            // 1. 磁盘缓存直接播（缓存键包含语速，改语速后旧缓存自动失效）
+            let cacheURL = Self.cacheFileURL(for: trimmed, speed: kokoroSpeed)
             if let cacheURL, FileManager.default.fileExists(atPath: cacheURL.path) {
                 play(fileURL: cacheURL)
                 return
@@ -89,7 +92,7 @@ final class WordSpeechService: NSObject, ObservableObject {
             // 2. Kokoro 合成
             if engineState == .ready, let kokoro {
                 do {
-                    let wav = try await kokoro.synthesize(text: trimmed)
+                    let wav = try await kokoro.synthesize(text: trimmed, speed: kokoroSpeed)
                     guard !Task.isCancelled else { return }
                     if let cacheURL {
                         try? wav.write(to: cacheURL)
@@ -149,7 +152,7 @@ final class WordSpeechService: NSObject, ObservableObject {
     private func speakWithSystemVoice(_ text: String) {
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = Self.bestEnglishSystemVoice()
-        utterance.rate = 0.45
+        utterance.rate = 0.4  // 系统语音同步放慢，与 Kokoro 慢速一致
         systemSynthesizer.speak(utterance)
     }
 
@@ -163,8 +166,8 @@ final class WordSpeechService: NSObject, ObservableObject {
 
     // MARK: - 缓存
 
-    /// 每个单词一个 wav：<Application Support>/WordAudio/<sha256 前 16 位>.wav
-    private static func cacheFileURL(for text: String) -> URL? {
+    /// 每个"单词+语速"一个 wav：<Application Support>/WordAudio/<sha256 前 16 位>.wav
+    private static func cacheFileURL(for text: String, speed: Float) -> URL? {
         guard
             let appSupport = FileManager.default.urls(
                 for: .applicationSupportDirectory, in: .userDomainMask
@@ -174,7 +177,7 @@ final class WordSpeechService: NSObject, ObservableObject {
         let dir = appSupport.appendingPathComponent("WordAudio")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
-        let digest = SHA256.hash(data: Data(text.lowercased().utf8))
+        let digest = SHA256.hash(data: Data("\(text.lowercased())@\(speed)".utf8))
         let name = digest.map { String(format: "%02x", $0) }.joined().prefix(16)
         return dir.appendingPathComponent("\(name).wav")
     }
