@@ -38,7 +38,8 @@ extension ClockInRecord {
                     question: realmQuestion.question,
                     correctAnswer: realmQuestion.correctAnswer,
                     options: Array(realmQuestion.options),
-                    hint: realmQuestion.hint
+                    hint: realmQuestion.hint,
+                    readAloudStars: realmQuestion.readAloudStars
                 )
             }
         } else {
@@ -71,6 +72,7 @@ extension ClockInRecord {
                 realmQuestion.correctAnswer = question.correctAnswer
                 realmQuestion.options.append(objectsIn: question.options ?? [])
                 realmQuestion.hint = question.hint
+                realmQuestion.readAloudStars = question.readAloudStars
                 realmRecord.questions.append(realmQuestion)
             }
         }

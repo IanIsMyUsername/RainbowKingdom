@@ -11,8 +11,10 @@
 		52AABB032E7B100000000003 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 52AABB022E7B100000000002 /* FluidAudio */; };
 		52AABB042E7B100000000004 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 52AABB002E7B100000000000 /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		52AABB212E7B100000000021 /* BundledModels in Resources */ = {isa = PBXBuildFile; fileRef = 52AABB202E7B100000000020 /* BundledModels */; };
-		52AABB412E7B100000000041 /* BundledStableDiffusion in Resources */ = {isa = PBXBuildFile; fileRef = 52AABB402E7B100000000040 /* BundledStableDiffusion */; };
 		52AABB332E7B100000000033 /* StableDiffusion in Frameworks */ = {isa = PBXBuildFile; productRef = 52AABB322E7B100000000032 /* StableDiffusion */; };
+		52AABB412E7B100000000041 /* BundledStableDiffusion in Resources */ = {isa = PBXBuildFile; fileRef = 52AABB402E7B100000000040 /* BundledStableDiffusion */; };
+		52AABB532E7B100000000053 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 52AABB522E7B100000000052 /* WhisperKit */; };
+		52AABB612E7B100000000061 /* BundledWhisper in Resources */ = {isa = PBXBuildFile; fileRef = 52AABB602E7B100000000060 /* BundledWhisper */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -32,6 +34,7 @@
 /* Begin PBXFileReference section */
 		52AABB202E7B100000000020 /* BundledModels */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledModels; sourceTree = "<group>"; };
 		52AABB402E7B100000000040 /* BundledStableDiffusion */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledStableDiffusion; sourceTree = "<group>"; };
+		52AABB602E7B100000000060 /* BundledWhisper */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledWhisper; sourceTree = "<group>"; };
 		52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RainbowKingdom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -51,6 +54,7 @@
 				52AABB012E7B100000000001 /* RealmSwift in Frameworks */,
 				52AABB032E7B100000000003 /* FluidAudio in Frameworks */,
 				52AABB332E7B100000000033 /* StableDiffusion in Frameworks */,
+				52AABB532E7B100000000053 /* WhisperKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -63,6 +67,7 @@
 				5222DE082E73086500FAB58B /* RainbowKingdom */,
 				52AABB202E7B100000000020 /* BundledModels */,
 				52AABB402E7B100000000040 /* BundledStableDiffusion */,
+				52AABB602E7B100000000060 /* BundledWhisper */,
 				5222DE072E73086500FAB58B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -99,6 +104,7 @@
 				52AABB002E7B100000000000 /* RealmSwift */,
 				52AABB022E7B100000000002 /* FluidAudio */,
 				52AABB322E7B100000000032 /* StableDiffusion */,
+				52AABB522E7B100000000052 /* WhisperKit */,
 			);
 			productName = RainbowKingdom;
 			productReference = 52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */;
@@ -132,6 +138,7 @@
 				52AABB102E7B100000000010 /* XCRemoteSwiftPackageReference "realm-swift" */,
 				52AABB112E7B100000000011 /* XCRemoteSwiftPackageReference "FluidAudio" */,
 				52AABB312E7B100000000031 /* XCRemoteSwiftPackageReference "ml-stable-diffusion" */,
+				52AABB512E7B100000000051 /* XCRemoteSwiftPackageReference "WhisperKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5222DE072E73086500FAB58B /* Products */;
@@ -150,6 +157,7 @@
 			files = (
 				52AABB212E7B100000000021 /* BundledModels in Resources */,
 				52AABB412E7B100000000041 /* BundledStableDiffusion in Resources */,
+				52AABB612E7B100000000061 /* BundledWhisper in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,6 +305,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "跟读练习需要使用麦克风听小朋友读英文单词，录音只在本机识别，不会上传。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -328,6 +337,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "跟读练习需要使用麦克风听小朋友读英文单词，录音只在本机识别，不会上传。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -395,6 +405,14 @@
 				version = 1.1.1;
 			};
 		};
+		52AABB512E7B100000000051 /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -412,6 +430,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 52AABB312E7B100000000031 /* XCRemoteSwiftPackageReference "ml-stable-diffusion" */;
 			productName = StableDiffusion;
+		};
+		52AABB522E7B100000000052 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 52AABB512E7B100000000051 /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

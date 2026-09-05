@@ -168,3 +168,4 @@ dmypy.json
 # Kokoro TTS 模型（约95MB，不入库；用 Tools/download_kokoro_models.py 重新下载）
 BundledModels/
 BundledStableDiffusion/
+BundledWhisper/

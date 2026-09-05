@@ -5,7 +5,8 @@
 # 做三件事：
 #   1. 下载 Kokoro 朗读模型到 BundledModels/（约 90 MB）
 #   2. 下载 Stable Diffusion 画图模型到 BundledStableDiffusion/（约 860 MB）
-#   3. 解析 Swift Package 依赖
+#   3. 下载 Whisper 听力模型（跟读打分）到 BundledWhisper/（约 490 MB）
+#   4. 解析 Swift Package 依赖
 #
 # 两个模型目录都在 .gitignore 里，clone 下来是空的，跑一次这个脚本即可。
 # 可重复执行：已完整的文件会跳过，中断后重跑从断点继续。
@@ -14,6 +15,7 @@
 #   ./scripts/setup.sh                # 全部
 #   ./scripts/setup.sh --kokoro-only  # 只下载朗读模型
 #   ./scripts/setup.sh --sd-only      # 只下载画图模型
+#   ./scripts/setup.sh --whisper-only # 只下载听力模型
 #   ./scripts/setup.sh --skip-resolve # 不解析 SPM 依赖
 #   ./scripts/setup.sh --open         # 完成后打开 Xcode 工程
 #   HF_ENDPOINT=https://xxx ./scripts/setup.sh   # 换 Hugging Face 入口（默认 https://huggingface.co）
@@ -33,11 +35,19 @@ SD_REV="04a6a0bdd66fb8da470c14e56d762343ef579d88"
 SD_REMOTE_DIR="split_einsum_v2/compiled"
 SD_DEST="$ROOT/BundledStableDiffusion/sd15-palettized-split-einsum-v2"   # 与 StableDiffusionModelStore.localFolderName 一致
 
-DO_KOKORO=1; DO_SD=1; DO_RESOLVE=1; DO_OPEN=0
+WHISPER_REPO="argmaxinc/whisperkit-coreml"
+WHISPER_REV="0f63a7800b00dd0226abd051b906c246e1907482"
+WHISPER_MODEL="openai_whisper-small.en"                      # 与 ReadAloudService.modelFolderName 一致
+WHISPER_TOKENIZER_REPO="openai/whisper-small.en"
+WHISPER_TOKENIZER_REV="e8727524f962ee844a7319d92be39ac1bd25655a"
+WHISPER_DEST="$ROOT/BundledWhisper"
+
+DO_KOKORO=1; DO_SD=1; DO_WHISPER=1; DO_RESOLVE=1; DO_OPEN=0
 for arg in "$@"; do
   case "$arg" in
-    --kokoro-only) DO_SD=0 ;;
-    --sd-only) DO_KOKORO=0 ;;
+    --kokoro-only) DO_SD=0; DO_WHISPER=0 ;;
+    --sd-only) DO_KOKORO=0; DO_WHISPER=0 ;;
+    --whisper-only) DO_KOKORO=0; DO_SD=0 ;;
     --skip-resolve) DO_RESOLVE=0 ;;
     --open) DO_OPEN=1 ;;
     -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
@@ -120,19 +130,41 @@ sync_sd() {
   ok "Stable Diffusion 文件已就位"
 }
 
+# ---- 3. Whisper（跟读识别）----
+sync_whisper() {
+  bold "▶ Whisper 听力模型 → BundledWhisper/"
+  local size path
+  # 模型目录原样下载
+  while IFS=$'\t' read -r size path; do
+    case "$path" in
+      "$WHISPER_MODEL"/*) fetch "$HF/$WHISPER_REPO/resolve/$WHISPER_REV/$path" "$WHISPER_DEST/$path" "$size" ;;
+    esac
+  done < <(hf_list "$WHISPER_REPO" "$WHISPER_REV")
+  # 分词器放在单独目录（ReadAloudService.tokenizerFolderName）
+  while IFS=$'\t' read -r size path; do
+    case "$path" in
+      tokenizer.json|tokenizer_config.json|config.json|special_tokens_map.json|added_tokens.json|vocab.json|merges.txt|normalizer.json|generation_config.json)
+        fetch "$HF/$WHISPER_TOKENIZER_REPO/resolve/$WHISPER_TOKENIZER_REV/$path" "$WHISPER_DEST/tokenizer-small.en/$path" "$size" ;;
+    esac
+  done < <(hf_list "$WHISPER_TOKENIZER_REPO" "$WHISPER_TOKENIZER_REV")
+  ok "Whisper 文件已就位"
+}
+
 # 注意：不能写成 [[ ... ]] && func，函数返回非 0 会触发 set -e 直接退出
 if [[ $DO_KOKORO -eq 1 ]]; then sync_kokoro; fi
 if [[ $DO_SD -eq 1 ]]; then sync_sd; fi
+if [[ $DO_WHISPER -eq 1 ]]; then sync_whisper; fi
 
 echo
 bold "模型文件：新下载 ${DOWNLOADED}，已存在跳过 ${SKIPPED}，失败 ${FAILED}"
 if [[ $DO_KOKORO -eq 1 ]]; then ok "BundledModels: $(du -sh "$KOKORO_DEST" 2>/dev/null | cut -f1)"; fi
 if [[ $DO_SD -eq 1 ]]; then ok "BundledStableDiffusion: $(du -sh "$SD_DEST" 2>/dev/null | cut -f1)"; fi
+if [[ $DO_WHISPER -eq 1 ]]; then ok "BundledWhisper: $(du -sh "$WHISPER_DEST" 2>/dev/null | cut -f1)"; fi
 if [[ $FAILED -gt 0 ]]; then
   fail "有文件没下完，检查网络后重新运行本脚本即可续传"; exit 1
 fi
 
-# ---- 3. SPM ----
+# ---- 4. SPM ----
 if [[ $DO_RESOLVE -eq 1 ]]; then
   echo
   bold "▶ 解析 Swift Package 依赖"

@@ -29,7 +29,20 @@ struct EnglishFillBlankView: View {
     @State private var needsCorrection = false
     @State private var answeredCorrectly: Set<Int> = [] // 首次答对的题目
     @State private var initiallyWrong: Set<Int> = [] // 首次答错的题目
+    @State private var readAloudStars: [Int: Int] = [:] // 题号 → 跟读星数
+    @State private var readAloudDone: Set<Int> = []
     @ObservedObject private var speech = WordSpeechService.shared
+    @ObservedObject private var readAloud = ReadAloudService.shared
+
+    /// 填对后是否需要跟读（配置开启且模型可用）
+    private var readAloudRequired: Bool {
+        configManager.config.readAloud.isEnabled && readAloud.isAvailable
+    }
+
+    /// 当前题填对了但还没完成跟读
+    private var readAloudPending: Bool {
+        readAloudRequired && showAnswerFeedback && isAnswerCorrect && !readAloudDone.contains(currentQuestionIndex)
+    }
     
     init(targetDate: Date? = nil) {
         self.targetDate = targetDate
@@ -196,6 +209,22 @@ struct EnglishFillBlankView: View {
                     )
                     Spacer()
                 }
+            }
+
+            // 填对后跟读打分，达标才能下一题
+            if readAloudPending {
+                ReadAloudCard(
+                    target: question.correctAnswer,
+                    chinese: question.chineseTranslation,
+                    passStars: configManager.config.readAloud.passStars,
+                    maxAttempts: configManager.config.readAloud.maxAttempts,
+                    accent: .purple
+                ) { stars, _ in
+                    readAloudStars[currentQuestionIndex] = stars
+                    readAloudDone.insert(currentQuestionIndex)
+                }
+                .id("readAloud-\(currentQuestionIndex)")
+                .padding(.horizontal)
             }
             
             Spacer()
@@ -428,6 +457,11 @@ struct EnglishFillBlankView: View {
                 .padding()
                 .background(Color.orange)
                 .cornerRadius(10)
+            } else if readAloudPending {
+                Text("读一读这个单词，再进入下一题")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .padding(.vertical, 8)
             } else {
                 Button(currentQuestionIndex == questions.count - 1 ? "完成练习" : "下一题") {
                     if currentQuestionIndex == questions.count - 1 {
@@ -612,6 +646,21 @@ struct EnglishFillBlankView: View {
                     speakerButton(for: question.correctAnswer, size: .body)
                 }
             }
+
+            if let stars = readAloudStars[index] {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("跟读")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.secondary)
+                    HStack(spacing: 4) {
+                        ForEach(0..<3, id: \.self) { i in
+                            Image(systemName: i < stars ? "star.fill" : "star")
+                                .font(.subheadline)
+                                .foregroundColor(i < stars ? .yellow : .gray.opacity(0.4))
+                        }
+                    }
+                }
+            }
         }
         .padding(16)
         .background(
@@ -665,6 +714,11 @@ struct EnglishFillBlankView: View {
         currentQuestionIndex = 0
         userInputs = Array(repeating: [], count: questions.count)
         quizStartTime = Date()
+
+        // 提前加载跟读用的听力模型
+        if readAloudRequired {
+            Task { await readAloud.prepare() }
+        }
     }
     
     private func getRecentVocabularies(recentMonths: Int, questionCount: Int) -> [Vocabulary] {
@@ -774,14 +828,15 @@ struct EnglishFillBlankView: View {
         let score = answeredCorrectly.count
         let timeSpent = quizStartTime?.timeIntervalSinceNow.magnitude ?? 0
         
-        let quizQuestions = questions.map { fillBlankQuestion in
+        let quizQuestions = questions.enumerated().map { index, fillBlankQuestion in
             QuizQuestion(
                 vocabulary: fillBlankQuestion.vocabulary,
                 questionType: .fillInBlank,
                 question: "请根据中文填写英文: \(fillBlankQuestion.chineseTranslation)\n\(fillBlankQuestion.partialWord)",
                 correctAnswer: fillBlankQuestion.correctAnswer,
                 options: nil,
-                hint: nil
+                hint: nil,
+                readAloudStars: readAloudStars[index]
             )
         }
         
@@ -803,6 +858,7 @@ struct EnglishFillBlankView: View {
         
         clockInManager.addClockInRecord(record)
         
+        SoundEffects.shared.play(.complete)
         showSummary = true
     }
     
@@ -846,6 +902,8 @@ struct EnglishFillBlankView: View {
         needsCorrection = false
         answeredCorrectly = []
         initiallyWrong = []
+        readAloudStars = [:]
+        readAloudDone = []
         quizStartTime = nil
         startQuiz()
     }
@@ -858,6 +916,7 @@ struct EnglishFillBlankView: View {
         
         isAnswerCorrect = checkCurrentAnswer(question)
         showAnswerFeedback = true
+        SoundEffects.shared.play(isAnswerCorrect ? .correct : .wrong)
         
         if isAnswerCorrect {
             // 只有首次答对且之前没有答错过才记录

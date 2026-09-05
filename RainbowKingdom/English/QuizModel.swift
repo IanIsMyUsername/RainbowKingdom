@@ -85,8 +85,9 @@ struct QuizQuestion: Identifiable, Codable {
     let correctAnswer: String
     let options: [String]? // 选择题选项
     let hint: String? // 提示信息
+    var readAloudStars: Int? = nil // 跟读得分（0-3 星），没跟读为 nil
     
-    init(id: UUID = UUID(), vocabulary: Vocabulary, questionType: QuestionType, question: String, correctAnswer: String, options: [String]? = nil, hint: String? = nil) {
+    init(id: UUID = UUID(), vocabulary: Vocabulary, questionType: QuestionType, question: String, correctAnswer: String, options: [String]? = nil, hint: String? = nil, readAloudStars: Int? = nil) {
         self.id = id
         self.vocabulary = vocabulary
         self.questionType = questionType
@@ -94,6 +95,7 @@ struct QuizQuestion: Identifiable, Codable {
         self.correctAnswer = correctAnswer
         self.options = options
         self.hint = hint
+        self.readAloudStars = readAloudStars
     }
 }
 

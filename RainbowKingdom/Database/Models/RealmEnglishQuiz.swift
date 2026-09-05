@@ -20,6 +20,7 @@ class RealmQuizQuestion: EmbeddedObject {
     @Persisted var correctAnswer: String = ""
     @Persisted var options: List<String> = List<String>()
     @Persisted var hint: String?
+    @Persisted var readAloudStars: Int? // 跟读得分（0-3 星）
 }
 
 /// 英语测验结果模型

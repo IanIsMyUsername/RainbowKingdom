@@ -77,6 +77,13 @@ class RealmAnimalBattleConfig: EmbeddedObject {
     @Persisted var isEnabled: Bool = true
 }
 
+/// 跟读配置（嵌套对象）
+class RealmReadAloudConfig: EmbeddedObject {
+    @Persisted var isEnabled: Bool = true
+    @Persisted var passStars: Int = 2
+    @Persisted var maxAttempts: Int = 3
+}
+
 /// 统一的练习配置模型
 class RealmPracticeConfig: Object {
     @Persisted(primaryKey: true) var id: String = "singleton" // 单例模式
@@ -85,6 +92,7 @@ class RealmPracticeConfig: Object {
     @Persisted var additionSubtraction: RealmAdditionSubtractionConfig?
     @Persisted var multiplication: RealmMultiplicationQuizConfig?
     @Persisted var animalBattle: RealmAnimalBattleConfig?
+    @Persisted var readAloud: RealmReadAloudConfig?
     
     override init() {
         super.init()
@@ -93,5 +101,6 @@ class RealmPracticeConfig: Object {
         self.additionSubtraction = RealmAdditionSubtractionConfig()
         self.multiplication = RealmMultiplicationQuizConfig()
         self.animalBattle = RealmAnimalBattleConfig()
+        self.readAloud = RealmReadAloudConfig()
     }
 }

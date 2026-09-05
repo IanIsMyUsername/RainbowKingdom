@@ -24,6 +24,9 @@ struct PracticeConfig: Codable {
 
     // 动物大作战配置
     var animalBattle: AnimalBattleConfig = AnimalBattleConfig()
+
+    // 跟读配置（拼对单词后跟读打分，达标才能下一题）
+    var readAloud: ReadAloudConfig = ReadAloudConfig()
 }
 
 // 英语翻译练习配置
@@ -51,6 +54,13 @@ struct AdditionSubtractionConfig: Codable {
 struct AnimalBattleConfig: Codable {
     var questionCount: Int = 10
     var isEnabled: Bool = true
+}
+
+// 跟读配置
+struct ReadAloudConfig: Codable {
+    var isEnabled: Bool = true
+    var passStars: Int = 2  // 几颗星算过（1-3）
+    var maxAttempts: Int = 3  // 最多读几次，用完不管几星都放行
 }
 
 // 练习配置管理器
@@ -85,6 +95,12 @@ class PracticeConfigManager: ObservableObject {
                     }
                     realm.animalBattle?.questionCount = self.config.animalBattle.questionCount
                     realm.animalBattle?.isEnabled = self.config.animalBattle.isEnabled
+                    if realm.readAloud == nil {
+                        realm.readAloud = RealmReadAloudConfig()
+                    }
+                    realm.readAloud?.isEnabled = self.config.readAloud.isEnabled
+                    realm.readAloud?.passStars = self.config.readAloud.passStars
+                    realm.readAloud?.maxAttempts = self.config.readAloud.maxAttempts
                 }
             } else {
                 let realmConfig = config.toRealm()

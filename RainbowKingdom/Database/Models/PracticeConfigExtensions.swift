@@ -36,6 +36,11 @@ extension PracticeConfig {
             questionCount: realmConfig.animalBattle?.questionCount ?? 10,
             isEnabled: realmConfig.animalBattle?.isEnabled ?? true
         )
+        self.readAloud = ReadAloudConfig(
+            isEnabled: realmConfig.readAloud?.isEnabled ?? true,
+            passStars: realmConfig.readAloud?.passStars ?? 2,
+            maxAttempts: realmConfig.readAloud?.maxAttempts ?? 3
+        )
     }
 
     /// 转换为RealmPracticeConfig
@@ -70,6 +75,12 @@ extension PracticeConfig {
         realmAnimalBattle.questionCount = animalBattle.questionCount
         realmAnimalBattle.isEnabled = animalBattle.isEnabled
         realmConfig.animalBattle = realmAnimalBattle
+
+        let realmReadAloud = RealmReadAloudConfig()
+        realmReadAloud.isEnabled = readAloud.isEnabled
+        realmReadAloud.passStars = readAloud.passStars
+        realmReadAloud.maxAttempts = readAloud.maxAttempts
+        realmConfig.readAloud = realmReadAloud
 
         return realmConfig
     }

@@ -38,6 +38,19 @@ struct AnimalBattleView: View {
     @State private var celebrate = false
     @State private var showModelDownload = false
     @State private var skippedModelDownload = false
+    @State private var readAloudStars: [Int: Int] = [:]  // 题号 → 跟读星数
+    @State private var readAloudDone: Set<Int> = []
+    @ObservedObject private var readAloud = ReadAloudService.shared
+
+    /// 拼对后是否需要跟读（配置开启且模型可用）
+    private var readAloudRequired: Bool {
+        configManager.config.readAloud.isEnabled && readAloud.isAvailable
+    }
+
+    /// 当前题拼对了但还没完成跟读
+    private var readAloudPending: Bool {
+        readAloudRequired && showFeedback && isCorrect && !readAloudDone.contains(currentIndex)
+    }
 
     init(targetDate: Date? = nil) {
         self.targetDate = targetDate
@@ -188,6 +201,21 @@ struct AnimalBattleView: View {
 
             if showFeedback {
                 feedbackBanner(question)
+            }
+
+            if readAloudPending {
+                ReadAloudCard(
+                    target: question.english,
+                    chinese: question.chinese,
+                    passStars: configManager.config.readAloud.passStars,
+                    maxAttempts: configManager.config.readAloud.maxAttempts,
+                    accent: .teal
+                ) { stars, _ in
+                    readAloudStars[currentIndex] = stars
+                    readAloudDone.insert(currentIndex)
+                }
+                .id("readAloud-\(currentIndex)")
+                .transition(.opacity)
             }
         }
         .frame(maxWidth: .infinity)
@@ -391,6 +419,11 @@ struct AnimalBattleView: View {
                 .padding()
                 .background(Color.orange.opacity(0.12))
                 .cornerRadius(10)
+            } else if readAloudPending {
+                Text("读一读上面的单词，再进入下一只")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .padding(.vertical, 8)
             } else {
                 Button(currentIndex == questions.count - 1 ? "完成练习" : "下一只") {
                     advance()
@@ -497,6 +530,18 @@ struct AnimalBattleView: View {
                     Text("你的拼写: \(answer.isEmpty ? "未作答" : answer)")
                         .font(.caption)
                         .foregroundColor(.red)
+                }
+                if let stars = readAloudStars[index] {
+                    HStack(spacing: 4) {
+                        Text("跟读")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        ForEach(0..<3, id: \.self) { i in
+                            Image(systemName: i < stars ? "star.fill" : "star")
+                                .font(.caption2)
+                                .foregroundColor(i < stars ? .yellow : .gray.opacity(0.4))
+                        }
+                    }
                 }
             }
 
@@ -608,6 +653,11 @@ struct AnimalBattleView: View {
         // 后台把本轮所有动物的图先画出来，后面的题零等待
         imageService.prefetch(questions)
 
+        // 跟读要用的听力模型也提前加载，孩子拼第一个词时就准备好了
+        if readAloudRequired {
+            Task { await readAloud.prepare() }
+        }
+
         // 有题目没有现成的图、模型又没下载：先问一下要不要下载（可跳过用表情）
         let needsGeneration = questions.contains { !imageService.hasLocalImage(for: $0) }
         if needsGeneration && !modelStore.isInstalled && !skippedModelDownload && !modelStore.state.isDownloading {
@@ -638,6 +688,7 @@ struct AnimalBattleView: View {
         let expected = question.english.lowercased().filter { $0.isLetter }
         isCorrect = currentInputs.joined().lowercased() == expected
         showFeedback = true
+        SoundEffects.shared.play(isCorrect ? .correct : .wrong)
 
         if isCorrect {
             if isFirst && !initiallyWrong.contains(currentIndex) {
@@ -645,7 +696,10 @@ struct AnimalBattleView: View {
             }
             needsCorrection = false
             focusedIndex = nil
-            speech.speak(question.english)
+            // 需要跟读时由跟读卡负责示范朗读，这里不再读，否则会连读两遍
+            if !readAloudRequired {
+                speech.speak(question.english)
+            }
             celebrate = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { celebrate = false }
         } else {
@@ -670,14 +724,15 @@ struct AnimalBattleView: View {
         let score = answeredCorrectly.count
         let timeSpent = startTime?.timeIntervalSinceNow.magnitude ?? 0
 
-        let quizQuestions = questions.map { animal in
+        let quizQuestions = questions.enumerated().map { index, animal in
             QuizQuestion(
                 vocabulary: Vocabulary(english: animal.english, chinese: animal.chinese, group: "动物", type: .word),
                 questionType: .fillInBlank,
                 question: "看图拼写动物: \(animal.chinese)",
                 correctAnswer: animal.english,
                 options: nil,
-                hint: animal.emoji
+                hint: animal.emoji,
+                readAloudStars: readAloudStars[index]
             )
         }
 
@@ -692,6 +747,7 @@ struct AnimalBattleView: View {
             userAnswers: inputs.map { $0.joined() }
         )
         clockInManager.addClockInRecord(record)
+        SoundEffects.shared.play(.complete)
         showSummary = true
     }
 
@@ -704,6 +760,8 @@ struct AnimalBattleView: View {
         isCorrect = false
         needsCorrection = false
         currentImage = nil
+        readAloudStars = [:]
+        readAloudDone = []
         startQuiz()
     }
 

@@ -34,6 +34,7 @@
 - **本地 AI 模型**（全部离线运行，模型文件不进 git）
   - Kokoro-82M：英文单词朗读（FluidAudio），约 90 MB，位于 `BundledModels/`
   - Stable Diffusion 1.5（Apple Core ML 6-bit）：「动物大作战」看图拼词的配图生成，约 860 MB，位于 `BundledStableDiffusion/`
+  - Whisper small.en（WhisperKit）：拼对单词后的跟读识别与打分，约 490 MB，位于 `BundledWhisper/`
 - **最低支持版本**：iOS 18.0
 
 ## 项目结构
@@ -44,11 +45,13 @@ RainbowKingdom/
 ├── Math/                 # 数学练习模块（加减法、乘法、练习配置页）
 ├── ClockIn/              # 每日一练（打卡日历、英语翻译/填空、动物大作战）
 ├── Animals/              # 动物大作战：词表、配图服务、Stable Diffusion 引擎与模型管理
+├── ReadAloud/            # 跟读打分：WhisperKit 识别、打分规则、跟读卡片
 ├── Speech/               # Kokoro 本地朗读
 ├── Database/             # Realm 数据库与数据模型
 └── Resources/            # vocabularies.csv 词表、animals.csv 动物词表
 BundledModels/            # Kokoro 模型（git 忽略，由 scripts/setup.sh 下载）
 BundledStableDiffusion/   # Stable Diffusion 模型（git 忽略，由 scripts/setup.sh 下载）
+BundledWhisper/           # Whisper 听力模型（git 忽略，由 scripts/setup.sh 下载）
 scripts/setup.sh          # 新机器一键准备脚本
 ```
 
@@ -65,7 +68,7 @@ scripts/setup.sh          # 新机器一键准备脚本
 ```bash
 git clone git@github.com:IanIsMyUsername/RainbowKingdom.git
 cd RainbowKingdom
-./scripts/setup.sh          # 下载两套模型（约 950 MB）并解析 Swift Package 依赖
+./scripts/setup.sh          # 下载三套模型（约 1.4 GB）并解析 Swift Package 依赖
 ```
 
 然后用 Xcode 打开 `RainbowKingdom.xcodeproj`，选真机运行即可。脚本可以重复执行：已完整的文件会跳过，中断后再跑会从断点继续。
@@ -75,6 +78,7 @@ cd RainbowKingdom
 ```bash
 ./scripts/setup.sh --kokoro-only   # 只下载朗读模型
 ./scripts/setup.sh --sd-only       # 只下载画图模型
+./scripts/setup.sh --whisper-only  # 只下载听力模型
 ./scripts/setup.sh --open          # 完成后自动打开 Xcode 工程
 HF_ENDPOINT=https://your-proxy ./scripts/setup.sh   # 换 Hugging Face 入口
 ```
