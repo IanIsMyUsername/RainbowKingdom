@@ -371,6 +371,7 @@ struct MultiplicationDailyPracticeView: View {
         self.correctAnswer = correctAnswer
         isAnswerCorrect = selectedOption == correctAnswer
         showAnswerFeedback = true
+        SoundEffects.shared.play(isAnswerCorrect ? .correct : .wrong)
     }
     
     // 获取选项文字颜色
@@ -483,6 +484,7 @@ struct MultiplicationDailyPracticeView: View {
             clockInManager.addClockInRecord(record)
         }
         
+        SoundEffects.shared.play(.complete)
         showSummary = true
     }
     

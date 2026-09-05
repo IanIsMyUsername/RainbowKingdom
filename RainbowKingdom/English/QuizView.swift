@@ -557,6 +557,7 @@ struct QuizQuestionView: View {
         
         isCorrect = trimmedAnswer == correctAnswer
         showResult = true
+        SoundEffects.shared.play(isCorrect ? .correct : .wrong)
         
         // 保存答案
         quizManager.submitAnswer(userAnswer)

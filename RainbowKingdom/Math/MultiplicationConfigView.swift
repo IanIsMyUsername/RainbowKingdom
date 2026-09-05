@@ -37,6 +37,14 @@ struct MultiplicationConfigView: View {
     @State private var showModelDownload = false
     @State private var confirmDeleteModel = false
     @ObservedObject private var modelStore = StableDiffusionModelStore.shared
+
+    // 跟读配置
+    @State private var readAloudEnabled: Bool = true
+    @State private var readAloudPassStars: Int = 2
+    @State private var readAloudMaxAttempts: Int = 3
+
+    @State private var showWarmUp = false
+    @State private var soundEffectsEnabled: Bool = SoundEffects.isEnabled
     
     var body: some View {
         NavigationView {
@@ -274,6 +282,66 @@ struct MultiplicationConfigView: View {
 
                     modelStatusRow
                 }
+
+                // 跟读配置
+                Section(header: Text("跟读打分"), footer: Text("英语填空和动物大作战里拼对单词后，需要跟读并达到通过星数才能进入下一题；读满次数后不管几星都放行。识别在本机完成，不联网。")) {
+                    Toggle("拼对后需要跟读", isOn: $readAloudEnabled)
+                        .tint(.purple)
+
+                    Stepper(value: $readAloudPassStars, in: 1...3) {
+                        HStack {
+                            Text("通过星数")
+                            Spacer()
+                            HStack(spacing: 2) {
+                                ForEach(0..<3, id: \.self) { i in
+                                    Image(systemName: i < readAloudPassStars ? "star.fill" : "star")
+                                        .foregroundColor(i < readAloudPassStars ? .yellow : .gray.opacity(0.4))
+                                        .font(.caption)
+                                }
+                            }
+                        }
+                    }
+                    .disabled(!readAloudEnabled)
+
+                    Stepper("最多读 \(readAloudMaxAttempts) 次", value: $readAloudMaxAttempts, in: 1...5)
+                        .disabled(!readAloudEnabled)
+
+                    HStack {
+                        Text("听力模型（Whisper small.en）")
+                            .font(.subheadline)
+                        Spacer()
+                        if ReadAloudService.isModelBundled {
+                            Label("已内置", systemImage: "checkmark.seal.fill")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        } else {
+                            Text("未打包，跟读会自动跳过")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        }
+                    }
+                }
+
+                Section(header: Text("音效")) {
+                    Toggle("答题音效（答对 / 答错 / 完成）", isOn: $soundEffectsEnabled)
+                        .tint(.green)
+                        .onChange(of: soundEffectsEnabled) { _, on in
+                            SoundEffects.isEnabled = on
+                            if on { SoundEffects.shared.play(.correct) }
+                        }
+                }
+
+                Section(header: Text("本地模型"), footer: Text("安装后第一次打开会自动预热；如果进练习时仍然等很久，可以在这里手动预热一次。")) {
+                    Button {
+                        ModelWarmUpCoordinator.shared.reset()
+                        showWarmUp = true
+                    } label: {
+                        Label("重新预热全部模型", systemImage: "sparkles")
+                    }
+                    .fullScreenCover(isPresented: $showWarmUp) {
+                        ModelWarmUpView()
+                    }
+                }
             }
             .navigationTitle("练习配置")
             .navigationBarTitleDisplayMode(.inline)
@@ -386,6 +454,11 @@ struct MultiplicationConfigView: View {
         // 加载动物大作战配置
         animalBattleEnabled = configManager.config.animalBattle.isEnabled
         animalBattleQuestionCount = configManager.config.animalBattle.questionCount
+
+        // 加载跟读配置
+        readAloudEnabled = configManager.config.readAloud.isEnabled
+        readAloudPassStars = configManager.config.readAloud.passStars
+        readAloudMaxAttempts = configManager.config.readAloud.maxAttempts
     }
 
     private func saveConfig() {
@@ -412,6 +485,11 @@ struct MultiplicationConfigView: View {
         // 保存动物大作战配置
         configManager.config.animalBattle.isEnabled = animalBattleEnabled
         configManager.config.animalBattle.questionCount = animalBattleQuestionCount
+
+        // 保存跟读配置
+        configManager.config.readAloud.isEnabled = readAloudEnabled
+        configManager.config.readAloud.passStars = readAloudPassStars
+        configManager.config.readAloud.maxAttempts = readAloudMaxAttempts
         
         configManager.saveConfig()
         

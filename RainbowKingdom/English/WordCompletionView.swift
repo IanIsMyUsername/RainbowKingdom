@@ -360,6 +360,7 @@ struct WordCompletionView: View {
         
         isCorrect = userAnswer == correctAnswer
         showResult = true
+        SoundEffects.shared.play(isCorrect ? .correct : .wrong)
         
         if isCorrect {
             if isFirstAttempt {

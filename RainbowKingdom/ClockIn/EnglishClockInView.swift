@@ -745,6 +745,7 @@ struct EnglishClockInView: View {
         clockInManager.addClockInRecord(record)
         
         // 显示总结界面
+        SoundEffects.shared.play(.complete)
         showSummary = true
     }
     
@@ -833,6 +834,7 @@ struct EnglishClockInView: View {
         self.correctAnswer = correctAnswer
         isAnswerCorrect = selectedOption.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == correctAnswer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         showAnswerFeedback = true
+        SoundEffects.shared.play(isAnswerCorrect ? .correct : .wrong)
     }
     
     // 获取选项文字颜色
