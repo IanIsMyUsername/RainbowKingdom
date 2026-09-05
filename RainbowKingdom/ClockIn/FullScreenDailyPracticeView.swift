@@ -22,6 +22,7 @@ struct FullScreenDailyPracticeView: View {
     @State private var showingEnglishFillBlank = false
     @State private var showingMathPractice = false
     @State private var showingMultiplicationPractice = false
+    @State private var showingAnimalBattle = false
     @State private var showingHistory = false
     @State private var showingMultiplicationConfig = false
     @State private var selectedDate: Date? = nil
@@ -78,6 +79,10 @@ struct FullScreenDailyPracticeView: View {
         }
         .fullScreenCover(isPresented: $showingMultiplicationPractice) {
             MultiplicationDailyPracticeView()
+                .environmentObject(clockInManager)
+        }
+        .fullScreenCover(isPresented: $showingAnimalBattle) {
+            AnimalBattleView()
                 .environmentObject(clockInManager)
         }
         .sheet(isPresented: $showingHistory) {
@@ -222,7 +227,8 @@ struct FullScreenDailyPracticeView: View {
         // 同时检查"加减法"和"数学"（兼容旧记录）
         let hasMathCheckIn = shouldCheckIn ? (clockInManager.hasCheckedInOnDate(date, subject: "加减法") || clockInManager.hasCheckedInOnDate(date, subject: "数学")) : false
         let hasMultiplicationCheckIn = shouldCheckIn ? clockInManager.hasCheckedInOnDate(date, subject: "乘法") : false
-        let hasAnyCheckIn = hasEnglishCheckIn || hasEnglishFillBlankCheckIn || hasMathCheckIn || hasMultiplicationCheckIn
+        let hasAnimalBattleCheckIn = shouldCheckIn ? clockInManager.hasCheckedInOnDate(date, subject: AnimalBattleView.subjectName) : false
+        let hasAnyCheckIn = hasEnglishCheckIn || hasEnglishFillBlankCheckIn || hasMathCheckIn || hasMultiplicationCheckIn || hasAnimalBattleCheckIn
         
         return Button(action: {
             selectedDate = date
@@ -235,49 +241,31 @@ struct FullScreenDailyPracticeView: View {
                         (isCurrentMonth ? (isFuture ? .secondary : .primary) : .secondary.opacity(0.5))
                     )
                 
-                // 打卡状态指示器 - 显示4个点（2x2布局）
-                if isPast || isToday {
-                    VStack(spacing: 1.5) {
-                        HStack(spacing: 1.5) {
-                            Circle()
-                                .fill(hasEnglishCheckIn ? .blue : .gray.opacity(0.2))
-                                .frame(width: 4, height: 4)
-                            Circle()
-                                .fill(hasEnglishFillBlankCheckIn ? .purple : .gray.opacity(0.2))
-                                .frame(width: 4, height: 4)
-                        }
-                        HStack(spacing: 1.5) {
-                            Circle()
-                                .fill(hasMathCheckIn ? .green : .gray.opacity(0.2))
-                                .frame(width: 4, height: 4)
-                            Circle()
-                                .fill(hasMultiplicationCheckIn ? .orange : .gray.opacity(0.2))
-                                .frame(width: 4, height: 4)
+                // 打卡状态指示器 - 5 个科目分两排（上 2 下 3）。
+                // 已完成：科目实色；未完成：同一科目的淡色（不用灰色，一眼能看出是哪一科）；未来日期更淡。
+                let subjectColors: [Color] = [.blue, .pink, .green, .orange, .teal]  // 英语填空用粉色，避免和今天的紫色底重合
+                let checks: [Bool] = [
+                    hasEnglishCheckIn, hasEnglishFillBlankCheckIn, hasMathCheckIn,
+                    hasMultiplicationCheckIn, hasAnimalBattleCheckIn,
+                ]
+                let idleOpacity = isFuture ? 0.15 : (isToday ? 0.45 : 0.28)
+                let dotColors: [Color] = (0..<5).map { i in
+                    checks[i] ? subjectColors[i] : subjectColors[i].opacity(idleOpacity)
+                }
+                VStack(spacing: 2) {
+                    HStack(spacing: 2.5) {
+                        ForEach(0..<2, id: \.self) { i in
+                            Circle().fill(dotColors[i]).frame(width: 5.5, height: 5.5)
                         }
                     }
-                } else if isFuture {
-                    // 未来日期显示灰色圆点
-                    VStack(spacing: 1.5) {
-                        HStack(spacing: 1.5) {
-                            Circle()
-                                .fill(.gray.opacity(0.2))
-                                .frame(width: 4, height: 4)
-                            Circle()
-                                .fill(.gray.opacity(0.2))
-                                .frame(width: 4, height: 4)
-                        }
-                        HStack(spacing: 1.5) {
-                            Circle()
-                                .fill(.gray.opacity(0.2))
-                                .frame(width: 4, height: 4)
-                            Circle()
-                                .fill(.gray.opacity(0.2))
-                                .frame(width: 4, height: 4)
+                    HStack(spacing: 2.5) {
+                        ForEach(2..<5, id: \.self) { i in
+                            Circle().fill(dotColors[i]).frame(width: 5.5, height: 5.5)
                         }
                     }
                 }
             }
-            .frame(width: 36, height: 40)
+            .frame(width: 36, height: 44)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(
@@ -431,10 +419,42 @@ struct FullScreenDailyPracticeView: View {
                     }
                 }
 
+                // 动物大作战打卡状态
+                if configManager.config.animalBattle.isEnabled {
+                    HStack {
+                        Image(systemName: clockInManager.hasCheckedInToday(subject: AnimalBattleView.subjectName) ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(clockInManager.hasCheckedInToday(subject: AnimalBattleView.subjectName) ? .green : .gray)
+                            .font(.body)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(AnimalBattleView.subjectName)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(clockInManager.hasCheckedInToday(subject: AnimalBattleView.subjectName) ? .green : .gray)
+
+                            if let animalRecord = clockInManager.getClockInRecord(for: Calendar.current.startOfDay(for: Date()), subject: AnimalBattleView.subjectName) {
+                                Text("\(animalRecord.score)/\(animalRecord.totalQuestions) · 已完成")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("用时: \(formatDuration(animalRecord.timeSpent))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("未完成")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Spacer()
+                    }
+                }
+
                 if !configManager.config.englishTranslation.isEnabled
                     && !configManager.config.englishFillBlank.isEnabled
                     && !configManager.config.additionSubtraction.isEnabled
-                    && !configManager.config.multiplication.isEnabled {
+                    && !configManager.config.multiplication.isEnabled
+                    && !configManager.config.animalBattle.isEnabled {
                     Text("今日无启用的练习项目")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -612,10 +632,49 @@ struct FullScreenDailyPracticeView: View {
                     }
                 }
 
+                if configManager.config.animalBattle.isEnabled {
+                    // 动物大作战按钮
+                    Button(action: {
+                        showingAnimalBattle = true
+                    }) {
+                        HStack {
+                            Image(systemName: "pawprint.fill")
+                                .font(.title2)
+                                .foregroundColor(.white)
+
+                            VStack(alignment: .leading) {
+                                Text(AnimalBattleView.subjectName)
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+
+                                Text("\(configManager.config.animalBattle.questionCount)只小动物，看图拼写英文单词")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.9))
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                        }
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.teal, .yellow]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(12)
+                    }
+                }
+
                 if !configManager.config.englishTranslation.isEnabled
                     && !configManager.config.englishFillBlank.isEnabled
                     && !configManager.config.additionSubtraction.isEnabled
-                    && !configManager.config.multiplication.isEnabled {
+                    && !configManager.config.multiplication.isEnabled
+                    && !configManager.config.animalBattle.isEnabled {
                     Text("暂无启用的练习项目，请前往「练习配置」开启")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
@@ -654,6 +713,7 @@ struct DayDetailView: View {
     @State private var showingMakeupEnglishFillBlank = false
     @State private var showingMakeupMathPractice = false
     @State private var showingMakeupMultiplicationPractice = false
+    @State private var showingMakeupAnimalBattle = false
     
     var body: some View {
         NavigationView {
@@ -718,6 +778,13 @@ struct DayDetailView: View {
         }
         .fullScreenCover(isPresented: $showingMakeupMultiplicationPractice) {
             MultiplicationDailyPracticeView(targetDate: selectedDate)
+                .environmentObject(clockInManager)
+                .onDisappear {
+                    clockInManager.loadFromRealm()
+                }
+        }
+        .fullScreenCover(isPresented: $showingMakeupAnimalBattle) {
+            AnimalBattleView(targetDate: selectedDate)
                 .environmentObject(clockInManager)
                 .onDisappear {
                     clockInManager.loadFromRealm()
@@ -839,7 +906,7 @@ struct DayDetailView: View {
     
     // 获取未打卡的科目列表
     private var missingSubjects: [String] {
-        let allSubjects = ["英语翻译", "英语填空", "加减法", "乘法"]
+        let allSubjects = ["英语翻译", "英语填空", "加减法", "乘法", AnimalBattleView.subjectName]
         let checkedInSubjects = Set(dayRecords.map { $0.subject })
         return allSubjects.filter { !checkedInSubjects.contains($0) }
     }
@@ -889,6 +956,8 @@ struct DayDetailView: View {
                 showingMakeupMathPractice = true
             case "乘法":
                 showingMakeupMultiplicationPractice = true
+            case AnimalBattleView.subjectName:
+                showingMakeupAnimalBattle = true
             default:
                 break
             }
@@ -937,6 +1006,8 @@ struct DayDetailView: View {
             return "plus.forwardslash.minus"
         case "乘法":
             return "multiply.circle.fill"
+        case AnimalBattleView.subjectName:
+            return "pawprint.fill"
         default:
             return "questionmark.circle.fill"
         }
@@ -953,6 +1024,8 @@ struct DayDetailView: View {
             return [.green, Color(red: 0.0, green: 0.8, blue: 0.6)]
         case "乘法":
             return [.orange, .red]
+        case AnimalBattleView.subjectName:
+            return [.teal, .yellow]
         default:
             return [.gray, .gray]
         }
@@ -973,6 +1046,7 @@ struct DayDetailView: View {
                     makeupSubjectButtonForSelection(subject: "英语填空")
                     makeupSubjectButtonForSelection(subject: "加减法")
                     makeupSubjectButtonForSelection(subject: "乘法")
+                    makeupSubjectButtonForSelection(subject: AnimalBattleView.subjectName)
                 }
                 .padding()
                 
@@ -1006,6 +1080,8 @@ struct DayDetailView: View {
                     showingMakeupMathPractice = true
                 case "乘法":
                     showingMakeupMultiplicationPractice = true
+                case AnimalBattleView.subjectName:
+                    showingMakeupAnimalBattle = true
                 default:
                     break
                 }

@@ -32,7 +32,7 @@ class DatabaseManager {
             config.fileURL = realmPath
             
             // 设置schema版本（用于未来迁移）
-            config.schemaVersion = 2
+            config.schemaVersion = 3  // v3: 练习配置新增「动物大作战」
 
             // 设置迁移块（未来需要时可以添加）
             config.migrationBlock = { migration, oldSchemaVersion in

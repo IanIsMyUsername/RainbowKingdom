@@ -25,6 +25,11 @@ final class WordSpeechService: NSObject, ObservableObject {
     @Published private(set) var engineState: EngineState = .idle
     @Published private(set) var isSpeaking = false
 
+    /// Kokoro 模型正在加载（界面用它显示 loading）
+    var isPreparing: Bool { engineState == .preparing }
+    /// 点击朗读时若模型还在加载，最多等这么久再回退系统语音
+    private let warmUpWaitLimit: Duration = .seconds(20)
+
     /// Kokoro 语速：1.0 为正常，越小越慢（0.8 ≈ 慢 20%，适合跟读）
     private let kokoroSpeed: Float = 0.8
 
@@ -79,6 +84,13 @@ final class WordSpeechService: NSObject, ObservableObject {
         speakTask = Task {
             isSpeaking = true
             defer { isSpeaking = false }
+
+            // 模型还在加载：等它就绪，避免第一次点发音听到的是另一种声音
+            let deadline = ContinuousClock.now + warmUpWaitLimit
+            while engineState == .preparing, ContinuousClock.now < deadline {
+                try? await Task.sleep(for: .milliseconds(150))
+                if Task.isCancelled { return }
+            }
 
             activateAudioSession()
 

@@ -1,0 +1,96 @@
+英文,中文,表情,图片描述
+# 列说明：英文,中文,表情（模型不可用时的兜底图）,图片描述（可选，留空用默认模板；含逗号请用英文双引号包起来）
+# ---- 鸟类 & 昆虫 ----
+eagle,老鹰,🦅,
+vulture,秃鹫,🦅,a cute cartoon vulture with a bald head
+bird,小鸟,🐦,
+mosquito,蚊子,🦟,
+fly,苍蝇,🪰,a cute cartoon housefly insect with big eyes
+butterfly,蝴蝶,🦋,
+dragonfly,蜻蜓,🪰,a cute cartoon dragonfly with four wings over a pond
+firefly,萤火虫,🪲,a cute cartoon firefly glowing at night
+katydid,螽斯,🦗,"a cute cartoon green katydid insect, like a grasshopper, on a leaf"
+bee,蜜蜂,🐝,
+moth,飞蛾,🪲,a cute cartoon moth with soft wings
+bug,虫子,🐛,a cute cartoon beetle bug insect
+ladybug,瓢虫,🐞,
+dragon,龙,🐉,a cute friendly cartoon baby dragon
+chickadee,山雀,🐦,"a cute cartoon chickadee, small bird with a black cap"
+owl,猫头鹰,🦉,
+woodpecker,啄木鸟,🐦,a cute cartoon woodpecker on a tree trunk
+bat,蝙蝠,🦇,"a cute cartoon bat, flying mammal with wings, at night"
+swallow,燕子,🐦,a cute cartoon swallow bird with a forked tail
+parrot,鹦鹉,🦜,
+# ---- 水里的 ----
+alligator,短吻鳄,🐊,
+crocodile,鳄鱼,🐊,
+octopus,章鱼,🐙,
+frog,青蛙,🐸,
+trout,鳟鱼,🐟,a cute cartoon trout fish in a river
+hippo,河马,🦛,
+penguin,企鹅,🐧,
+lantern fish,灯笼鱼,🐟,a cute cartoon lanternfish glowing in the deep dark sea
+jellyfish,水母,🪼,
+immortal jellyfish,灯塔水母,🪼,a cute small cartoon glowing jellyfish underwater
+shrimp,虾,🦐,
+lobster,龙虾,🦞,
+shellfish,贝类,🦪,"cute cartoon shellfish, clams and scallops on the beach"
+oyster,牡蛎,🦪,
+clownfish,小丑鱼,🐠,
+whale,鲸鱼,🐳,
+shark,鲨鱼,🦈,
+hippocampus,海马,🐠,a cute cartoon seahorse underwater
+dolphin,海豚,🐬,a happy dolphin jumping out of the blue sea
+seagull,海鸥,🐦,a cute cartoon seagull by the sea
+seal,海豹,🦭,"a cute cartoon seal, sea mammal, lying on ice"
+sea lion,海狮,🦭,a cute cartoon sea lion on a rock
+# ---- 陆地动物 ----
+dog,狗,🐶,
+puppy,小狗,🐶,a cute cartoon puppy
+cat,猫,🐱,
+elephant,大象,🐘,
+cow,奶牛,🐮,
+yak,牦牛,🐃,a cute cartoon yak with long hair and horns
+bull,公牛,🐂,a cute cartoon bull with horns
+ox,牛,🐂,a cute cartoon ox with horns
+pig,猪,🐷,
+hog,肥猪,🐗,a cute cartoon big pig
+piggy,小猪,🐷,a cute cartoon little piggy
+boar,野猪,🐗,a cute cartoon wild boar
+sheep,绵羊,🐑,
+goat,山羊,🐐,
+tiger,老虎,🐯,
+lion,狮子,🦁,
+leopard,豹子,🐆,
+fox,狐狸,🦊,
+chicken,鸡,🐔,
+chick,小鸡,🐤,a cute yellow cartoon baby chick
+hen,母鸡,🐔,a cute cartoon hen
+rooster,公鸡,🐓,
+mice,老鼠（复数）,🐭,two cute cartoon mice
+mouse,老鼠,🐭,a cute cartoon mouse
+monkey,猴子,🐵,
+bear,熊,🐻,
+polar bear,北极熊,🐻‍❄️,
+panda,熊猫,🐼,a cute giant panda eating bamboo
+squirrel,松鼠,🐿️,
+snake,蛇,🐍,
+python,蟒蛇,🐍,a cute cartoon big python snake
+newt,蝾螈,🦎,"a cute cartoon newt, small orange salamander"
+rabbit,兔子,🐰,
+bunny,小兔子,🐰,a cute cartoon bunny
+spider,蜘蛛,🕷️,a cute friendly cartoon spider
+turtle,乌龟,🐢,
+snail,蜗牛,🐌,
+unicorn,独角兽,🦄,
+horse,马,🐴,
+pony,小马,🐴,a cute cartoon pony
+gorilla,大猩猩,🦍,
+giraffe,长颈鹿,🦒,
+zebra,斑马,🦓,
+camel,骆驼,🐫,
+wolf,狼,🐺,
+ostrich,鸵鸟,🐦,a cute cartoon ostrich with long legs
+rhinoceros,犀牛,🦏,
+flamingo,火烈鸟,🦩,
+kangaroo,袋鼠,🦘,

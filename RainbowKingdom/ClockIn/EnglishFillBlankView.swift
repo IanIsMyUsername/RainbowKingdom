@@ -241,7 +241,7 @@ struct EnglishFillBlankView: View {
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 4)
-                                        .stroke(letterIndex == focusedIndex ? Color.blue : Color.gray.opacity(0.3), lineWidth: 2)
+                                        .strokeBorder(letterIndex == focusedIndex ? Color.blue : Color.gray.opacity(0.3), lineWidth: 2)
                                 )
                         }
                         .disabled(showAnswerFeedback && !needsCorrection)
@@ -631,9 +631,14 @@ struct EnglishFillBlankView: View {
         Button(action: {
             speech.speak(word)
         }) {
-            Image(systemName: speech.isSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
-                .font(size)
-                .foregroundColor(.blue)
+            if speech.isPreparing {
+                ProgressView()
+                    .tint(.blue)
+            } else {
+                Image(systemName: speech.isSpeaking ? "speaker.wave.2.fill" : "speaker.wave.2")
+                    .font(size)
+                    .foregroundColor(.blue)
+            }
         }
         .buttonStyle(.plain)
     }
@@ -893,6 +898,8 @@ struct FillBlankQuestion {
 
 // 简化的键盘视图
 struct KeyboardView: View {
+    /// 按键显示为小写（默认大写，保持英语填空原有样式）
+    var lowercase: Bool = false
     let onInput: (String) -> Void
     let onDelete: () -> Void
     let onDone: () -> Void
@@ -911,7 +918,7 @@ struct KeyboardView: View {
                         Button(action: {
                             onInput(letter)
                         }) {
-                            Text(letter)
+                            Text(lowercase ? letter.lowercased() : letter)
                                 .font(.system(size: 26, weight: .semibold))
                                 .foregroundColor(.primary)
                                 .frame(width: 44, height: 56)

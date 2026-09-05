@@ -151,10 +151,19 @@ struct EnglishClockInView: View {
                         speech.speak(question.vocabulary.english)
                     }) {
                         HStack(spacing: 10) {
-                            Image(systemName: speech.isSpeaking ? "speaker.wave.3.fill" : "play.circle.fill")
-                                .font(.system(size: 40))
-                            Text("点击播放")
-                                .font(.headline)
+                            if speech.isPreparing {
+                                ProgressView()
+                                    .tint(.white)
+                                    .scaleEffect(1.4)
+                                    .frame(width: 40, height: 40)
+                                Text("语音准备中…")
+                                    .font(.headline)
+                            } else {
+                                Image(systemName: speech.isSpeaking ? "speaker.wave.3.fill" : "play.circle.fill")
+                                    .font(.system(size: 40))
+                                Text("点击播放")
+                                    .font(.headline)
+                            }
                         }
                         .foregroundColor(.white)
                         .padding(.horizontal, 28)
@@ -183,9 +192,14 @@ struct EnglishClockInView: View {
                     Button(action: {
                         speech.speak(question.vocabulary.english)
                     }) {
-                        Image(systemName: "speaker.wave.2")
-                            .font(.title2)
-                            .foregroundColor(.blue)
+                        if speech.isPreparing {
+                            ProgressView()
+                                .tint(.blue)
+                        } else {
+                            Image(systemName: "speaker.wave.2")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                        }
                     }
                     .buttonStyle(.plain)
                 }

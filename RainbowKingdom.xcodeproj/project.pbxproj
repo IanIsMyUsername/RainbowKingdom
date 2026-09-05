@@ -11,6 +11,8 @@
 		52AABB032E7B100000000003 /* FluidAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 52AABB022E7B100000000002 /* FluidAudio */; };
 		52AABB042E7B100000000004 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 52AABB002E7B100000000000 /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		52AABB212E7B100000000021 /* BundledModels in Resources */ = {isa = PBXBuildFile; fileRef = 52AABB202E7B100000000020 /* BundledModels */; };
+		52AABB412E7B100000000041 /* BundledStableDiffusion in Resources */ = {isa = PBXBuildFile; fileRef = 52AABB402E7B100000000040 /* BundledStableDiffusion */; };
+		52AABB332E7B100000000033 /* StableDiffusion in Frameworks */ = {isa = PBXBuildFile; productRef = 52AABB322E7B100000000032 /* StableDiffusion */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,6 +31,7 @@
 
 /* Begin PBXFileReference section */
 		52AABB202E7B100000000020 /* BundledModels */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledModels; sourceTree = "<group>"; };
+		52AABB402E7B100000000040 /* BundledStableDiffusion */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledStableDiffusion; sourceTree = "<group>"; };
 		52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RainbowKingdom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -47,6 +50,7 @@
 			files = (
 				52AABB012E7B100000000001 /* RealmSwift in Frameworks */,
 				52AABB032E7B100000000003 /* FluidAudio in Frameworks */,
+				52AABB332E7B100000000033 /* StableDiffusion in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -58,6 +62,7 @@
 			children = (
 				5222DE082E73086500FAB58B /* RainbowKingdom */,
 				52AABB202E7B100000000020 /* BundledModels */,
+				52AABB402E7B100000000040 /* BundledStableDiffusion */,
 				5222DE072E73086500FAB58B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -93,6 +98,7 @@
 			packageProductDependencies = (
 				52AABB002E7B100000000000 /* RealmSwift */,
 				52AABB022E7B100000000002 /* FluidAudio */,
+				52AABB322E7B100000000032 /* StableDiffusion */,
 			);
 			productName = RainbowKingdom;
 			productReference = 52CA12AE2EC77AE300DFB3ED /* RainbowKingdom.app */;
@@ -125,6 +131,7 @@
 			packageReferences = (
 				52AABB102E7B100000000010 /* XCRemoteSwiftPackageReference "realm-swift" */,
 				52AABB112E7B100000000011 /* XCRemoteSwiftPackageReference "FluidAudio" */,
+				52AABB312E7B100000000031 /* XCRemoteSwiftPackageReference "ml-stable-diffusion" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5222DE072E73086500FAB58B /* Products */;
@@ -142,6 +149,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				52AABB212E7B100000000021 /* BundledModels in Resources */,
+				52AABB412E7B100000000041 /* BundledStableDiffusion in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -294,7 +302,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -325,7 +333,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -379,6 +387,14 @@
 				minimumVersion = 0.12.4;
 			};
 		};
+		52AABB312E7B100000000031 /* XCRemoteSwiftPackageReference "ml-stable-diffusion" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/ml-stable-diffusion.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.1.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -391,6 +407,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 52AABB112E7B100000000011 /* XCRemoteSwiftPackageReference "FluidAudio" */;
 			productName = FluidAudio;
+		};
+		52AABB322E7B100000000032 /* StableDiffusion */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 52AABB312E7B100000000031 /* XCRemoteSwiftPackageReference "ml-stable-diffusion" */;
+			productName = StableDiffusion;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

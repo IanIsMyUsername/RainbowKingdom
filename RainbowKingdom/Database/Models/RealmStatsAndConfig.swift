@@ -71,6 +71,12 @@ class RealmMultiplicationQuizConfig: EmbeddedObject {
     @Persisted var isEnabled: Bool = true
 }
 
+/// 动物大作战配置（嵌套对象）
+class RealmAnimalBattleConfig: EmbeddedObject {
+    @Persisted var questionCount: Int = 10
+    @Persisted var isEnabled: Bool = true
+}
+
 /// 统一的练习配置模型
 class RealmPracticeConfig: Object {
     @Persisted(primaryKey: true) var id: String = "singleton" // 单例模式
@@ -78,6 +84,7 @@ class RealmPracticeConfig: Object {
     @Persisted var englishFillBlank: RealmEnglishFillBlankConfig?
     @Persisted var additionSubtraction: RealmAdditionSubtractionConfig?
     @Persisted var multiplication: RealmMultiplicationQuizConfig?
+    @Persisted var animalBattle: RealmAnimalBattleConfig?
     
     override init() {
         super.init()
@@ -85,5 +92,6 @@ class RealmPracticeConfig: Object {
         self.englishFillBlank = RealmEnglishFillBlankConfig()
         self.additionSubtraction = RealmAdditionSubtractionConfig()
         self.multiplication = RealmMultiplicationQuizConfig()
+        self.animalBattle = RealmAnimalBattleConfig()
     }
 }

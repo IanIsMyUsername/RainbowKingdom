@@ -32,6 +32,10 @@ extension PracticeConfig {
             questionCount: realmConfig.multiplication?.questionCount ?? 10,
             isEnabled: realmConfig.multiplication?.isEnabled ?? true
         )
+        self.animalBattle = AnimalBattleConfig(
+            questionCount: realmConfig.animalBattle?.questionCount ?? 10,
+            isEnabled: realmConfig.animalBattle?.isEnabled ?? true
+        )
     }
 
     /// 转换为RealmPracticeConfig
@@ -61,6 +65,11 @@ extension PracticeConfig {
         realmMultiplication.questionCount = multiplication.questionCount
         realmMultiplication.isEnabled = multiplication.isEnabled
         realmConfig.multiplication = realmMultiplication
+
+        let realmAnimalBattle = RealmAnimalBattleConfig()
+        realmAnimalBattle.questionCount = animalBattle.questionCount
+        realmAnimalBattle.isEnabled = animalBattle.isEnabled
+        realmConfig.animalBattle = realmAnimalBattle
 
         return realmConfig
     }

@@ -30,6 +30,13 @@ struct MultiplicationConfigView: View {
     @State private var multiplicationEnabled: Bool = true
     @State private var multiplicationQuestionCount: Int = 10
     @State private var multiplicationMaxNumber: Int = 3
+
+    // 动物大作战配置
+    @State private var animalBattleEnabled: Bool = true
+    @State private var animalBattleQuestionCount: Int = 10
+    @State private var showModelDownload = false
+    @State private var confirmDeleteModel = false
+    @ObservedObject private var modelStore = StableDiffusionModelStore.shared
     
     var body: some View {
         NavigationView {
@@ -237,6 +244,36 @@ struct MultiplicationConfigView: View {
                     }
                     .padding(.vertical, 8)
                 }
+
+                // 动物大作战配置
+                Section(header: Text("动物大作战"), footer: Text("看图拼写动物单词。图片由本机 Stable Diffusion 模型生成，词表在 Resources/animals.csv 中维护。")) {
+                    Toggle("启用动物大作战", isOn: $animalBattleEnabled)
+                        .tint(.teal)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("题目数量: \(animalBattleQuestionCount)")
+                            .font(.headline)
+
+                        Slider(value: Binding<Double>(
+                            get: { Double(animalBattleQuestionCount) },
+                            set: { animalBattleQuestionCount = Int($0) }
+                        ), in: 3...20, step: 1)
+                        .accentColor(.teal)
+
+                        HStack {
+                            Text("3")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("20")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 8)
+
+                    modelStatusRow
+                }
             }
             .navigationTitle("练习配置")
             .navigationBarTitleDisplayMode(.inline)
@@ -261,6 +298,70 @@ struct MultiplicationConfigView: View {
         }
     }
     
+    /// 画画模型状态：已下载 / 下载中 / 未下载，附下载或删除操作
+    @ViewBuilder
+    private var modelStatusRow: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("画画模型（Stable Diffusion）")
+                    .font(.headline)
+                switch modelStore.state {
+                case .installed where modelStore.isBundled:
+                    Text("已随 App 内置，占用 \(StableDiffusionModelStore.formatBytes(modelStore.installedBytes))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                case .installed:
+                    Text("已下载，占用 \(StableDiffusionModelStore.formatBytes(modelStore.installedBytes))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                case .downloading(let completed, let total):
+                    Text("下载中 \(Int(Double(completed) / Double(max(total, 1)) * 100))%")
+                        .font(.caption)
+                        .foregroundColor(.teal)
+                case .failed(let message):
+                    Text("下载失败：\(message)")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                case .notInstalled:
+                    Text("未下载，约 \(StableDiffusionModelStore.formatBytes(StableDiffusionModelStore.totalBytes))。未下载时用表情代替图片")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            switch modelStore.state {
+            case .installed where modelStore.isBundled:
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundColor(.green)
+            case .installed:
+                Button("删除") {
+                    confirmDeleteModel = true
+                }
+                .foregroundColor(.red)
+            default:
+                Button(modelStore.state.isDownloading ? "查看进度" : "下载") {
+                    showModelDownload = true
+                }
+                .foregroundColor(.teal)
+            }
+        }
+        .padding(.vertical, 4)
+        .sheet(isPresented: $showModelDownload) {
+            ModelDownloadView(allowSkip: false)
+        }
+        .alert("删除画画模型？", isPresented: $confirmDeleteModel) {
+            Button("删除", role: .destructive) {
+                modelStore.deleteModel()
+                AnimalImageService.shared.modelAvailabilityChanged()
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("已经画好的动物图片会保留，删除后新动物将用表情代替，需要时可重新下载。")
+        }
+    }
+
     private func loadConfig() {
         // 加载英语翻译配置
         englishTranslationEnabled = configManager.config.englishTranslation.isEnabled
@@ -281,6 +382,10 @@ struct MultiplicationConfigView: View {
         multiplicationEnabled = configManager.config.multiplication.isEnabled
         multiplicationQuestionCount = configManager.config.multiplication.questionCount
         multiplicationMaxNumber = configManager.config.multiplication.maxNumber
+
+        // 加载动物大作战配置
+        animalBattleEnabled = configManager.config.animalBattle.isEnabled
+        animalBattleQuestionCount = configManager.config.animalBattle.questionCount
     }
 
     private func saveConfig() {
@@ -303,6 +408,10 @@ struct MultiplicationConfigView: View {
         configManager.config.multiplication.isEnabled = multiplicationEnabled
         configManager.config.multiplication.questionCount = multiplicationQuestionCount
         configManager.config.multiplication.maxNumber = multiplicationMaxNumber
+
+        // 保存动物大作战配置
+        configManager.config.animalBattle.isEnabled = animalBattleEnabled
+        configManager.config.animalBattle.questionCount = animalBattleQuestionCount
         
         configManager.saveConfig()
         

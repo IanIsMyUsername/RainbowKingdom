@@ -21,6 +21,9 @@ struct PracticeConfig: Codable {
     
     // 乘法练习配置
     var multiplication: MultiplicationQuizConfig = MultiplicationQuizConfig()
+
+    // 动物大作战配置
+    var animalBattle: AnimalBattleConfig = AnimalBattleConfig()
 }
 
 // 英语翻译练习配置
@@ -41,6 +44,12 @@ struct EnglishFillBlankConfig: Codable {
 struct AdditionSubtractionConfig: Codable {
     var questionCount: Int = 10
     var maxNumber: Int = 40 // 多少以内
+    var isEnabled: Bool = true
+}
+
+// 动物大作战配置（看图拼写动物单词）
+struct AnimalBattleConfig: Codable {
+    var questionCount: Int = 10
     var isEnabled: Bool = true
 }
 
@@ -70,6 +79,12 @@ class PracticeConfigManager: ObservableObject {
                     realm.multiplication?.maxNumber = self.config.multiplication.maxNumber
                     realm.multiplication?.questionCount = self.config.multiplication.questionCount
                     realm.multiplication?.isEnabled = self.config.multiplication.isEnabled
+                    if realm.animalBattle == nil {
+                        // 旧版本数据库里没有这个嵌套对象，写入时补建
+                        realm.animalBattle = RealmAnimalBattleConfig()
+                    }
+                    realm.animalBattle?.questionCount = self.config.animalBattle.questionCount
+                    realm.animalBattle?.isEnabled = self.config.animalBattle.isEnabled
                 }
             } else {
                 let realmConfig = config.toRealm()
